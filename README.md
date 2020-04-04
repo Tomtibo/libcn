@@ -1,6 +1,6 @@
 **Description**
 
-`libcn` is an unoficial python library for cyphernode. The command line utility `cn-cli`, support some options and tab autocomplete.
+`libcn` is an unofficial python library for cyphernode. The command line utility `cn-cli`, support some options and tab autocomplete.
 
 **What is cyphernode**
 
@@ -15,6 +15,12 @@ This project is experimental, so be sure you understand what this program does, 
 
 - A cyphernode api server running
 - Python3 installed on client machine
+- Modules installed in your python environement
+  - argparse
+  - configparser
+  - requests
+  - urllib3
+  - paho.mqtt.client
 
 ****
 
@@ -37,7 +43,7 @@ Clone libcn :
 ~/$ git clone https://github.com/tomtibo/libcn/
 ```
 ****
-By default, libcn will look for a config file at $HOME/.cn/cn.conf. Optionaly you can specify the config file location with `configfile` argument OR using `cnid`, `key` and `url` arguments directly. 
+By default, libcn will look for a config file at $HOME/.cn/cn.conf. Optionaly you can specify the config file location with `configfile` argument OR using `cnid`, `key` and `url` arguments directly. When using `cn-cli` command line utility, using `--cnid`, `--key` and `--url` prevent secrets to be stored as clear text on the filesystem.
 
 [Optional]
 ```

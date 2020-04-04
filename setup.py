@@ -15,6 +15,8 @@ setuptools.setup(
     url = 'https://github.com/tomtibo/libcn',
     keywords = ['cyphernode', 'bitcoin', 'api'], 
     install_requires=[
+        'argparse',
+        'configparser',
         'requests',
         'urllib3',
         'paho.mqtt.client',
