@@ -1,0 +1,68 @@
+#!/usr/bin/python3
+import argparse
+import os
+import json
+import sys
+from libcn.libcn import CypherNode
+def main(arg):
+    conf = handle_cmdline_config(arg)
+#    for item in conf.items():
+#        print(item)
+    cn = CypherNode(cnid=conf['cnid'][0], key=conf['key'][0], url=conf['url'][0], unsecure=conf['unsecure'], verbose=conf['verbose'], configfile=conf['config_file'])
+    resp = None
+    if conf['args']:
+        resp = eval('cn.{}{}'.format(conf['command'], tuple(conf['args'])))
+    elif not conf['args']:
+        if conf['command']:
+            resp = eval('cn.{}()'.format(conf['command']))
+    if conf['info']:
+        data = cn.inform(conf['info'][0])
+        print(data)
+    if conf['list']:
+        cn.listing(conf['list'][0])
+    if conf['token']:
+        token = cn.get_token()
+        print(token)
+    if resp:
+        if conf['json'] == True:
+            print(json.dumps(resp, indent=2, sort_keys=True))
+        else:
+            print(json.dumps(resp))
+def handle_cmdline_config(arg):
+    conf = argparse.ArgumentParser()
+#    config_file
+    conf.add_argument('command', nargs='?', help='Command')
+    conf.add_argument('arguments', nargs='*', help='Command arguments')
+    conf.add_argument('--cnid', nargs=1, type=str, default=['None'], choices=['000', '001', '002', '003', None], help='Set the cyphernode ID')
+    conf.add_argument('--key', nargs=1, type=str, default=['None'], help='Set the cyphernode autorisation key')
+    conf.add_argument('--url', nargs=1, type=str, default=['None'], help='Set the cyphernode URL')
+#    conf.add_argument('-h', '--help', help='Show this help message and exit')
+    conf.add_argument('-l', '--list', nargs=1, type=str, choices=['all', 'stats', 'watcher', 'spender', 'admin'], help='List command available')
+    conf.add_argument('-i', '--info', nargs=1, type=str, metavar='COMMAND', help='Get command informations')
+    # if configuration file exist, load it !
+    if os.path.exists("{}/.cn/cn.conf".format(os.path.expanduser('~'))):
+        conf.add_argument('-c', '--configfile', nargs=1, type=str, default="{}/.cn/cn.conf".format(os.path.expanduser('~')), help='Define the configuration file absolute path')
+    else:
+        conf.add_argument('-c', '--configfile', nargs=1, type=str, default=None, help='Define the configuration file absolute path')
+    conf.add_argument('-u', '--unsecure', action="store_true", default=None, help='Ignore ssl certificate error')
+    conf.add_argument('-j', '--json', action="store_true", default=None, help='Use json indentation formating')
+    conf.add_argument('-t', '--token', action="store_true", default=None, help='Generate and return autorisation token')
+    conf.add_argument('-v', '--verbose', action="store_true", help='Use verbose mode')
+    args = conf.parse_args(arg)
+    hcc = {}
+    hcc['config_file'] = args.configfile
+    hcc['unsecure'] = args.unsecure
+    hcc['list'] = args.list
+    hcc['json'] = args.json
+    hcc['info'] = args.info
+    hcc['token'] = args.token
+    hcc['verbose'] = args.verbose
+    hcc['command'] = args.command
+    hcc['args'] = args.arguments
+    hcc['cnid'] = args.cnid
+    hcc['key'] = args.key
+    hcc['url'] = args.url
+    hcc['response'] = None
+    return hcc
+if __name__=='__main__':
+    main(sys.argv[1:])

@@ -1,0 +1,8 @@
+#-------------------------------------
+# cn configuration file exemple
+# Uncomment the following lines
+
+#[cyphernode_config]
+#cnid = "cyphernode_id"
+#key = "cyphernode_key"
+#url = "cyphernode_url:2009/v0"
