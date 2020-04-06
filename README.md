@@ -20,7 +20,6 @@ This project is experimental, so be sure you understand what this program does, 
   - configparser
   - requests
   - urllib3
-  - paho.mqtt.client
 
 ****
 
