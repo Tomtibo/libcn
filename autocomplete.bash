@@ -43,8 +43,4 @@ ots_stamp
 ots_getfile
 ln_getinvoice
 ln_decodebolt11
-ln_connectfund
-conf
-newblock
-executecallbacks
-ots_backoffice""" cn
+ln_connectfund""" cn cnt cnm cn-cli

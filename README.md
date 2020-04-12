@@ -1,6 +1,6 @@
 **Description**
 
-`libcn` is an unofficial python library for cyphernode. The command line utility `cn-cli`, support some options and tab autocomplete.
+`libcn` is an unofficial python library for cyphernode. The `CypherNode` class provide a client object. The `CallbackServer` class provide an easy way to handle callbacks. And `cn-cli` is a command line utility that support some options and tab autocomplete.
 
 **What is cyphernode**
 
@@ -42,7 +42,7 @@ Clone libcn :
 ~/$ git clone https://github.com/tomtibo/libcn/
 ```
 ****
-By default, libcn will look for a config file at $HOME/.cn/cn.conf. Optionaly you can specify the config file location with `configfile` argument OR using `cnid`, `key` and `url` arguments directly. When using `cn-cli` command line utility, using `--cnid`, `--key` and `--url` prevent secrets to be stored as clear text on the filesystem.
+By default, `CypherNode` class and `cn-cli` utility will look for a config file at $HOME/.cn/cn.conf. Optionaly you can specify the config file location with `configfile` argument OR using `cnid`, `key` and `url` arguments directly. When using `cn-cli` command line utility, using `--cnid`, `--key` and `--url` prevent secrets to be stored as clear text on the filesystem.
 
 [Optional]
 ```
@@ -66,7 +66,7 @@ The configuration file should look like this :
 
 ****
 
-**Use the library**
+**Use the `CypherNode` object**
 
 ![](libcn.gif)
 
@@ -78,8 +78,8 @@ The configuration file should look like this :
 ~/libcn/$ ./cn-cli -h
 
 usage: cn-cli [-h] [--cnid {000,001,002,003,None}] [--key KEY] [--url URL]
-              [-l {all,stats,watcher,spender,admin}] [-i COMMAND]
-              [-c CONFIGFILE] [-u] [-j] [-t] [-v]
+              [-l {all,stats,watcher,spender}] [-i COMMAND] [-c CONFIGFILE]
+              [-u] [-j] [-t] [-v]
               [command] [arguments [arguments ...]]
 
 positional arguments:
@@ -92,7 +92,7 @@ optional arguments:
                         Set the cyphernode ID
   --key KEY             Set the cyphernode autorisation key
   --url URL             Set the cyphernode URL
-  -l {all,stats,watcher,spender,admin}, --list {all,stats,watcher,spender,admin}
+  -l {all,stats,watcher,spender}, --list {all,stats,watcher,spender}
                         List command available
   -i COMMAND, --info COMMAND
                         Get command informations
@@ -119,7 +119,7 @@ Add autocomplete functionality (Ajust autocomplete.bash to your shell and alias 
 ```
 ~/$ echo 'source /path/to/dir/libcn/autocomplete.bash' >> $HOME/.bashrc
 ```
-Add an alias for cn-cli:
+Command line option can be added to overwrite default. Also multiple alias can be defined. Add alias for cn-cli:
 ```
 ~/$ echo "alias cn='cn-cli'" >> $HOME/.bashrc
 ```
@@ -132,6 +132,15 @@ Then logout and restart a new shell session.
 ![](cn-cli.gif)
 
 ****
+
+**Use the `CallbackServer` object**
+
+CallbackServer is a socket server object used in a child class to listen incoming callbacks request and execute actions. Each functions must reflect the callbacks url used in cyphernode callbacks config. For exemple, a watched address with callback url `http://url:port/conf` need a function called `conf` to be handled by this child class. The 'return' statement will send the returned value to the coresponding response topic. If no 'return' statement is used, a string value of 'True' is sent. If the function fail or if the function do not exist, a string value of 'False' is sent. 
+
+WARNING! Be aware that CallbackServer will receive and send data as clear text, so it is NOT recommended to use it over the internet. It's build to be use in a secure docker network, on a secure local network or over secure VPN network. WARNING!
+
+For a full exemple of how to use `CallbackServer`, see the server_exemple.py file.
+
 
 **Things that do not work**
 
@@ -153,8 +162,7 @@ Command not working:
 - Fix not working things
 - Handle security level based on cyphernode id
 - Make request more low level. Use socket not requests lib
-- Add server mode for callbacks
-- Add cypher mode for running code as a cypherapps
+- Add `CypherApp` for running code as a cypherapps using mqtt
 - Add error handling
 - Add logging
 - Add CI integration tests and deploy

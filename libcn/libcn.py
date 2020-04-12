@@ -112,16 +112,6 @@ class CypherNode:
         request = "self.requests.post{}.json()".format(tuple(self.req)).replace('\'', '')
         response = eval(request)
         return response
-<<<<<<< HEAD
-    # Experimental server modes
-    def cn_server_mode(self, port):
-        """Not working right now"""
-        pass
-    def cn_cypher_mode(self):
-        """Not working right now"""
-        pass
-=======
->>>>>>> dev
     # Get requests
     def getblockchaininfo(self):
         """Get blockchain information"""
@@ -391,10 +381,6 @@ class CypherNode:
         endpoint = "{}/ots_backoffice".format(self.url)
         response = self.get_data(endpoint)
         return response
-<<<<<<< HEAD
-<<<<<<< master
-=======
-
  """
 class CallbackServer:
     """CallbackServer is a socket server used in a child class to
@@ -466,74 +452,6 @@ class CallbackServer:
                             data.outb = data.outb[sent:]
     def start(self):
         """CallbacksServer main process to start listen"""
-=======
-
-class CypherServer:
-    def __init__(self, mode='server', port):
-        self.mode = mode
-        self.port = port
-        if self.mode != 'client':
-            if self.mode == 'server':
-                callbk = self.cn_server_mode()
-                while callbk == True:
-                    return callbk
-            elif self.mode == 'cypher':
-                self.cn_cypher_mode()
-        pass
-    def cn_server_mode(self):
-        """Not working right now"""
-        sel = selectors.DefaultSelector()
-        jsonRe = re.compile(b'{(.*)}')
-        def accept_wrapper(sock):
-            conn, addr = sock.accept()
-        #    print("accepted connection from", addr)
-            conn.setblocking(False)
-            data = types.SimpleNamespace(addr=addr, inb=b"", outb=b"")
-            events = selectors.EVENT_READ | selectors.EVENT_WRITE
-            sel.register(conn, events, data=data)
-        def generate_headers(response_code, lenght):
-            header = ''
-            if response_code == 200:
-                header += 'HTTP/1.1 200 OK\n'
-            elif response_code == 404:
-                header += 'HTTP/1.1 404 Not Found\n'
-        #    time_now = time.strftime("%a, %d %b %Y %H:%M:%S", time.localtime())
-        #    header += 'Date: {now}\n'.format(now=time_now)
-        #    header += 'Content-Type: application/json\n'
-        #    header += 'X-Forwarded-Proto: https\n'
-        #    header += 'Connection: Close\n' # Signal that connection will be closed after completing the request
-        #    leng = len(header)
-            header += 'Content-Length: {}\n\n'.format(lenght)
-            return header
-        def service_connection(key, mask):
-            sock = key.fileobj
-            data = key.data
-            if mask & selectors.EVENT_READ:
-                recv_data = sock.recv(1024)
-                if recv_data:
-                    data.outb += recv_data
-                else:
-        #            print("closing connection to", data.addr)
-                    sel.unregister(sock)
-                    sock.close()
-            if mask & selectors.EVENT_WRITE:
-                if data.outb:
-        #            print(data.outb)
-                    if jsonRe.search(data.outb):
-                        callback = jsonRe.search(data.outb).group(1)
-                        callback = callback.decode('utf-8')
-                        callback = '{}{}{}'.format("{", callback, "}")
-                        callback = json.loads(callback)
-                        callback = json.dumps(callback)
-                        print(callback)
-                        leng = len(callback)
-                        headers = generate_headers(200, leng)
-        #            print("echoing", repr(data.outb), "to", data.addr)
-                        sent = sock.send(bytes('{}{}'.format(headers, callback).encode('utf-8')))
-                        data.outb = data.outb[sent:]
-                        return callback.encode('utf-8')
-                    ## Do stuff with resp variable ##
->>>>>>> dev
         host = ''
         port = int(self.port)
         lsock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -541,7 +459,6 @@ class CypherServer:
         lsock.listen()
         #print("listening on", (host, port))
         lsock.setblocking(False)
-<<<<<<< HEAD
         self.sel = selectors.DefaultSelector()
         self.sel.register(lsock, selectors.EVENT_READ, data=None)
         try:
@@ -557,80 +474,3 @@ class CypherServer:
             print("CallbackServer Warning")
         finally:
             self.sel.close()
->>>>>>> local
-=======
-        sel.register(lsock, selectors.EVENT_READ, data=None)
-        try:
-            while True:
-                events = sel.select(timeout=None)
-                for key, mask in events:
-                    if key.data is None:
-                        accept_wrapper(key.fileobj)
-                    else:
-                        call = service_connection(key, mask)
-                        return call
-        except KeyboardInterrupt:
-            print("caught keyboard interrupt, exiting")
-        finally:
-            sel.close()
-    def cn_cypher_mode(self):
-        """Not tested"""
-        def on_connect(client, userdata, flags, rc):
-            if rc == 0:
-                print("Connected to broker")
-                global Connected                #Use global variable
-                Connected = True                #Signal connection
-            else:
-                print("Connection failed")
-        def on_message(client, userdata, message):
-            try:
-        #        print(message.payload)
-                print(client)
-                print(userdata)
-                rmesg = json.loads(message.payload)
-                try:
-                    if rmesg['curl_code']:
-                        callback = json.dumps(rmesg, indent=2)
-                except ArithmeticError:
-                    pass
-                try:
-                    if rmesg['newblock']:
-                        callback = json.dumps(rmesg, indent=2)
-                except ArithmeticError:
-                    pass
-                try:
-                    if rmesg['response-topic']:
-                        body = rmesg['body']
-            #            print(body)
-                        mesg = base64.b64decode(body).decode('utf-8').replace('\n', '')
-                        response = json.loads(mesg)
-                        callback = json.dumps(response, indent=2)
-                except ArithmeticError:
-                    pass
-                if resp:
-                    print(resp)
-            except:
-                print('error !')
-        try:
-            Connected = False   #global variable for the state of the connection
-            broker_address = "broker"  #Broker address
-            port = 1883                         #Broker port
-            client = mqttClient.Client("Python")               #create new instance
-        #    client.username_pw_set(user, password=password)    #set username and password
-            client.on_connect = on_connect                      #attach function to callback
-            client.on_message = on_message                      #attach function to callback
-            client.connect(broker_address, port=port)          #connect to broker
-            client.loop_start()        #start the loop
-            while Connected != True:    #Wait for connection
-                time.sleep(0.1)
-            client.subscribe("#")
-        except ConnectionError:
-            print('Erreur de connection')
-        try:
-            while True:
-                time.sleep(1)
-        except KeyboardInterrupt:
-            print("exiting")
-            client.disconnect()
-            client.loop_stop()
->>>>>>> dev
