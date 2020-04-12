@@ -16,8 +16,6 @@ class CypherNode:
         key=None, \
         url=None, \
         configfile="{}/.cn/cn.conf".format(os.path.expanduser('~')), \
-        mode='client', \
-        serverport=None, \
         unsecure=False, \
         verbose=False):
         """Cyphernode object reprensenting a cyphernode server"""
@@ -29,13 +27,11 @@ class CypherNode:
         self.spender_cmd = ['gettxnslist', 'getbalance', 'getbalances', 'getbalancebyxpub', 'getbalancebyxpublabel', 'getnewaddress',\
             'spend', 'bumpfee', 'addtobatch', 'batchspend', 'deriveindex', 'derivexpubpath', 'ln_pay', 'ln_newaddr', 'ots_stamp',\
             'ots_getfile', 'ln_getinvoice', 'ln_decodebolt11', 'ln_connectfund']
-        self.admin_cmd = ['conf', 'newblock', 'executecallbacks', 'ots_backoffice']
+        #self.admin_cmd = ['conf', 'newblock', 'executecallbacks', 'ots_backoffice']
         self.all_cmd = []
-        for itm in self.stats_cmd, self.watcher_cmd, self.spender_cmd, self.admin_cmd:
+        for itm in self.stats_cmd, self.watcher_cmd, self.spender_cmd: #, self.admin_cmd:
             for item in itm:
                 self.all_cmd.append(item)
-        self.mode = mode
-        self.port = serverport
         self.unsecure = unsecure
         self.requests = requests
         self.h64 = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9Cg=="
@@ -373,24 +369,121 @@ class CypherNode:
         payload = json.dumps(payload)
         response = self.post_data(endpoint, payload)
         return response
-    # Callbacks requests
+"""     # Callbacks requests
     def conf(self):##########
-        """Not working right now"""
+        Not working right now"
         endpoint = "{}/conf".format(self.url)
         response = self.get_data(endpoint)
         return response
     def newblock(self):##########
-        """Not working right now"""
+        Not working right now"
         endpoint = "{}/newblock".format(self.url)
         response = self.get_data(endpoint)
         return response
     def executecallbacks(self):###########
-        """Not working right now"""
+        "Not working right now"
         endpoint = "{}/executecallbacks".format(self.url)
         response = self.get_data(endpoint)
         return response
     def ots_backoffice(self):#########
-        """Not working right now"""
+        Not working right now"
         endpoint = "{}/ots_backoffice".format(self.url)
         response = self.get_data(endpoint)
         return response
+<<<<<<< master
+=======
+
+ """
+class CallbackServer:
+    """CallbackServer is a socket server used in a child class to
+    listen incoming callbacks request"""
+    def __init__(self, port):
+        """Initialyse callback server"""
+        self.port = port
+    def accept_wrapper(self, sock):
+        """Accept incoming connections"""
+        conn, addr = sock.accept()
+        #print("accepted connection from", addr)
+        conn.setblocking(False)
+        data = types.SimpleNamespace(addr=addr, inb=b"", outb=b"")
+        events = selectors.EVENT_READ | selectors.EVENT_WRITE
+        self.sel.register(conn, events, data=data)
+    def get_headers(self, response_code, lenght):
+        """Build response headers"""
+        header = ''
+        if response_code == 200:
+            header += 'HTTP/1.1 200 OK\n'
+        elif response_code == 404:
+            header += 'HTTP/1.1 404 Not Found\n'
+        header += 'Content-Length: {}\n\n'.format(lenght)
+        return header
+    def service_connection(self, key, mask):
+        """Execute actions on incomming callbacks"""
+        sock = key.fileobj
+        data = key.data
+        if mask & selectors.EVENT_READ:
+            recv_data = sock.recv(1024)
+            if recv_data:
+                data.outb += recv_data
+            else:
+            #   print("closing connection to", data.addr)
+                self.sel.unregister(sock)
+                sock.close()
+        if mask & selectors.EVENT_WRITE:
+            if data.outb:
+                request = None
+                callback = None
+                #print('Data = {}'.format(data.outb))
+                requestRe = re.compile(b'POST\ \/(.*)\ ')
+                if requestRe.search(data.outb):
+                    request = requestRe.search(data.outb).group(1)
+                    request = request.decode('utf-8')
+                    #print('request = {}'.format(request))
+                jsonRe = re.compile(b'{(.*)}')
+                if jsonRe.search(data.outb):
+                    callback = jsonRe.search(data.outb).group(1)
+                    callback = callback.decode('utf-8')
+                    callback = '{}{}{}'.format("{", callback, "}")
+                    callback = json.loads(callback)
+                    callback = json.dumps(callback)
+                    #print(callback)
+                if request and callback:
+                        try:
+                            response = eval('self.{}({})'.format(request, callback))
+                            if not response:
+                                response = 'True'
+                            leng = len(response)
+                            headers = self.get_headers(200, leng)
+                            sent = sock.send(bytes('{}{}'.format(headers, response).encode('utf-8')))
+                            data.outb = data.outb[sent:]
+                        except ChildProcessError:
+                            response = 'False'
+                            leng = len(response)
+                            headers = self.get_headers(404, leng)
+                            sent = sock.send(bytes('{}{}'.format(headers, response).encode('utf-8')))
+                            data.outb = data.outb[sent:]
+    def start(self):
+        """CallbacksServer main process to start listen"""
+        host = ''
+        port = int(self.port)
+        lsock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        lsock.bind((host, port))
+        lsock.listen()
+        #print("listening on", (host, port))
+        lsock.setblocking(False)
+        self.sel = selectors.DefaultSelector()
+        self.sel.register(lsock, selectors.EVENT_READ, data=None)
+        try:
+            while True:
+                events = self.sel.select(timeout=None)
+                for key, mask in events:
+                    #print('{} = {}'.format(key, mask))
+                    if key.data is None:
+                        self.accept_wrapper(key.fileobj)
+                    else:
+                        self.service_connection(key, mask)
+        except Warning:
+            print("CallbackServer Warning")
+        finally:
+            self.sel.close()
+>>>>>>> local
