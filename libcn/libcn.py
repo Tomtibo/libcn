@@ -52,6 +52,22 @@ class CypherNode:
                     self.cnid = "{}".format(config.get(key, 'cnid')).replace('"', '')
                     self.key = "{}".format(config.get(key, 'key')).replace('"', '')
                     self.url = "{}".format(config.get(key, 'url')).replace('"', '')
+            self.auth = []
+            if self.cnid == '003':
+                for itm in self.stats_cmd, self.watcher_cmd, self.spender_cmd: #, self.admin_cmd:
+                    for item in itm:
+                        self.auth.append(item)
+            elif self.cnid == '002':
+                for itm in self.stats_cmd, self.watcher_cmd, self.spender_cmd: #, self.admin_cmd:
+                    for item in itm:
+                        self.auth.append(item)
+            elif self.cnid == '001':
+                for itm in self.stats_cmd, self.watcher_cmd:
+                    for item in itm:
+                        self.auth.append(item)
+            elif self.cnid == '000':
+                for itm in self.stats_cmd:
+                    self.auth.append(itm)
         except ConnectionRefusedError:
             print('Authentification failed !')
             return None
@@ -99,266 +115,317 @@ class CypherNode:
         headers = {"Authorization": "Bearer {}".format(self.get_token())}
         return headers
     # Handle requests
-    def get_data(self, endpoint):
+    def get_data(self, call, endpoint):
         """Get data request"""
-        headers = self.get_headers()
-        request = "self.requests.get{}.json()".format(tuple(self.req)).replace('\'', '')
-        response = eval(request)
-        return response
-    def post_data(self, endpoint, payload):
+        if call in self.auth:
+            headers = self.get_headers()
+            request = "self.requests.get{}.json()".format(tuple(self.req)).replace('\'', '')
+            response = eval(request)
+            return response
+        else:
+            raise ConnectionRefusedError
+            return 'Not authorised'
+    def post_data(self, call, endpoint, payload):
         """Post data request"""
-        headers = self.get_headers()
-        self.req.append('data=payload')
-        request = "self.requests.post{}.json()".format(tuple(self.req)).replace('\'', '')
-        response = eval(request)
-        return response
+        if call in self.auth:
+            headers = self.get_headers()
+            self.req.append('data=payload')
+            request = "self.requests.post{}.json()".format(tuple(self.req)).replace('\'', '')
+            response = eval(request)
+            return response
+        else:
+            raise ConnectionRefusedError
+            return 'Not authorised'
     # Get requests
     def getblockchaininfo(self):
         """Get blockchain information"""
-        endpoint = "{}/getblockchaininfo".format(self.url)
-        response = self.get_data(endpoint)
+        call = 'getblockchaininfo'
+        endpoint = "{}/{}".format(self.url, call)
+        response = self.get_data(call, endpoint)
         return response
     def installation_info(self):
         """Get cyphernode installation information"""
-        endpoint = "{}/installation_info".format(self.url)
-        response = self.get_data(endpoint)
+        call = 'installation_info'
+        endpoint = "{}/{}".format(self.url, call)
+        response = self.get_data(call, endpoint)
         return response
     def helloworld(self): ###############
         """Not working right now"""
-        endpoint = "{}/helloworld".format(self.url)
-        response = self.get_data(endpoint)
+        call = 'helloworld'
+        endpoint = "{}/{}".format(self.url, call)
+        response = self.get_data(call, endpoint)
         return response
     def getmempoolinfo(self):
         """Ger memory pool information"""
-        endpoint = "{}/getmempoolinfo".format(self.url)
-        response = self.get_data(endpoint)
+        call = 'getmempoolinfo'
+        endpoint = "{}/{}".format(self.url, call)
+        response = self.get_data(call, endpoint)
         return response
     def getbestblockhash(self):
         """Get best block hash"""
-        endpoint = "{}/getbestblockhash".format(self.url)
-        response = self.get_data(endpoint)
+        call = 'getbestblockhash'
+        endpoint = "{}/{}".format(self.url, call)
+        response = self.get_data(call, endpoint)
         return response
     def getbestblockinfo(self):
         """Get best block information"""
-        endpoint = "{}/getbestblockinfo".format(self.url)
-        response = self.get_data(endpoint)
+        call = 'getbestblockinfo'
+        endpoint = "{}/{}".format(self.url, call)
+        response = self.get_data(call, endpoint)
         return response
     def ln_getinfo(self):
         """Get lightning information"""
-        endpoint = "{}/ln_getinfo".format(self.url)
-        response = self.get_data(endpoint)
+        call = 'ln_getinfo'
+        endpoint = "{}/{}".format(self.url, call)
+        response = self.get_data(call, endpoint)
         return response
     def ln_getconnectionstring(self):
         """Get lightning connection string"""
-        endpoint = "{}/ln_getconnectionstring".format(self.url)
-        response = self.get_data(endpoint)
+        call = 'ln_getconnectionstring'
+        endpoint = "{}/{}".format(self.url, call)
+        response = self.get_data(call, endpoint)
         return response
     def ln_newaddr(self):
         """Get new lightning address"""
-        endpoint = "{}/ln_newaddr".format(self.url)
-        response = self.get_data(endpoint)
+        call = 'ln_newaddr'
+        endpoint = "{}/{}".format(self.url, call)
+        response = self.get_data(call, endpoint)
         return response
     def gettxnslist(self):################
         """Not working right now"""
-        endpoint = "{}/gettxnslist".format(self.url)
-        response = self.get_data(endpoint)
+        call = 'gettxnslist'
+        endpoint = "{}/{}".format(self.url, call)
+        response = self.get_data(call, endpoint)
         return response
     def getbalance(self):
         """Get spender wallet balance"""
-        endpoint = "{}/getbalance".format(self.url)
-        response = self.get_data(endpoint)
+        call = 'getbalance'
+        endpoint = "{}/{}".format(self.url, call)
+        response = self.get_data(call, endpoint)
         return response
     def getbalances(self):
         """Get spender wallet balance"""
-        endpoint = "{}/getbalances".format(self.url)
-        response = self.get_data(endpoint)
+        call = 'getbalances'
+        endpoint = "{}/{}".format(self.url, call)
+        response = self.get_data(call, endpoint)
         return response
     def getactivewatches(self):
         """Get a list of watched address"""
-        endpoint = "{}/getactivewatches".format(self.url)
-        response = self.get_data(endpoint)
+        call = 'getactivewatches'
+        endpoint = "{}/{}".format(self.url, call)
+        response = self.get_data(call, endpoint)
         return response
     def getactivexpubwatches(self):
         """Get a list of watched xpub"""
-        endpoint = "{}/getactivexpubwatches".format(self.url)
-        response = self.get_data(endpoint)
+        call = 'getactivexpubwatches'
+        endpoint = "{}/{}".format(self.url, call)
+        response = self.get_data(call, endpoint)
         return response
     # Get requests with optional argument
     def getnewaddress(self, *typeid):
         """Get new address"""
+        call = 'getnewaddress'
         if typeid:
-            endpoint = "{}/getnewaddress/{}".format(self.url, typeid)
+            endpoint = "{}/{}/{}".format(self.url, call, typeid)
         else:
-            endpoint = "{}/getnewaddress".format(self.url)
-        response = self.get_data(endpoint)
+            endpoint = "{}/{}".format(self.url, call)
+        response = self.get_data(call, endpoint)
         return response
     # Get request with argument(s)
     def getblockhash(self):
         "hashing"
-        endpoint = "{}/getblockhash".format(self.url)
-        response = self.get_data(endpoint)
+        call = 'getblockhash'
+        endpoint = "{}/{}".format(self.url, call)
+        response = self.get_data(call, endpoint)
         return response
     def unwatch(self, address):
         "address"
-        endpoint = "{}/unwatch/{}".format(self.url, address)
-        response = self.get_data(endpoint)
+        call = 'unwatch'
+        endpoint = "{}/{}/{}".format(self.url, call, address)
+        response = self.get_data(call, endpoint)
         return response
     def unwatchxpubbyxpub(self, xpub):
         "xpub"
-        endpoint = "{}/unwatchxpubbyxpub/{}".format(self.url, xpub)
-        response = self.get_data(endpoint)
+        call = 'unwatchxpubbyxpub'
+        endpoint = "{}/{}/{}".format(self.url, call, xpub)
+        response = self.get_data(call, endpoint)
         return response
     def unwatchxpubbylabel(self, label):
         "label"
-        endpoint = "{}/unwatchxpubbylabel/{}".format(self.url, label)
-        response = self.get_data(endpoint)
+        call = 'unwatchxpubbylabel'
+        endpoint = "{}/{}/{}".format(self.url, call, label)
+        response = self.get_data(call, endpoint)
         return response
     def getactivewatchesbyxpub(self, xpub):
         "xpub"
-        endpoint = "{}/getactivewatchesbyxpub/{}".format(self.url, xpub)
-        response = self.get_data(endpoint)
+        call = 'getactivewatchesbyxpub'
+        endpoint = "{}/{}/{}".format(self.url, call, xpub)
+        response = self.get_data(call, endpoint)
         return response
     def getactivewatchesbylabel(self, label):
         "label"
-        endpoint = "{}/getactivewatchesbylabel/{}".format(self.url, label)
-        response = self.get_data(endpoint)
+        call = 'getactivewatchesbylabel'
+        endpoint = "{}/{}/{}".format(self.url, call, label)
+        response = self.get_data(call, endpoint)
         return response
     def get_txns_by_watchlabel(self, label):
         "label"
-        endpoint = "{}/get_txns_by_watchlabel/{}".format(self.url, label)
-        response = self.get_data(endpoint)
+        call = 'get_txns_by_watchlabel'
+        endpoint = "{}/{}/{}".format(self.url, call, label)
+        response = self.get_data(call, endpoint)
         return response
     def get_unused_addresses_by_watchlabel(self, label):
         "label"
-        endpoint = "{}/get_unused_addresses_by_watchlabel/{}".format(self.url, label)
-        response = self.get_data(endpoint)
+        call = 'get_unused_addresses_by_watchlabel'
+        endpoint = "{}/{}/{}".format(self.url, call, label)
+        response = self.get_data(call, endpoint)
         return response
     def getblockinfo(self, block):
         "label"
-        endpoint = "{}/getblockinfo/{}".format(self.url, block)
-        response = self.get_data(endpoint)
+        call = 'getblockinfo'
+        endpoint = "{}/{}/{}".format(self.url, call, block)
+        response = self.get_data(call, endpoint)
         return response
     def gettransaction(self, txid):
         "txid"
-        endpoint = "{}/gettransaction/{}".format(self.url, txid)
-        response = self.get_data(endpoint)
+        call = 'gettransaction'
+        endpoint = "{}/{}/{}".format(self.url, call, txid)
+        response = self.get_data(call, endpoint)
         return response
     def ln_decodebolt11(self, bolt11):
         "label"
-        endpoint = "{}/ln_decodebolt11/{}".format(self.url, bolt11)
-        response = self.get_data(endpoint)
+        call = 'ln_decodebolt11'
+        endpoint = "{}/{}/{}".format(self.url, call, bolt11)
+        response = self.get_data(call, endpoint)
         return response
     def getbalancebyxpub(self, xpub):
         "label"
-        endpoint = "{}/getbalancebyxpub/{}".format(self.url, xpub)
-        response = self.get_data(endpoint)
+        call = 'getbalancebyxpub'
+        endpoint = "{}/{}/{}".format(self.url, call, xpub)
+        response = self.get_data(call, endpoint)
         return response
     def getbalancebyxpublabel(self, label):
         "label"
-        endpoint = "{}/getbalancebyxpublabel/{}".format(self.url, label)
-        response = self.get_data(endpoint)
+        call = 'getbalancebyxpublabel'
+        endpoint = "{}/{}/{}".format(self.url, call, label)
+        response = self.get_data(call, endpoint)
         return response
     def ots_getfile(self, hashing):
         "label"
-        endpoint = "{}/ots_getfile/{}".format(self.url, hashing)
-        response = self.get_data(endpoint)
+        call = 'ots_getfile'
+        endpoint = "{}/{}/{}".format(self.url, call, hashing)
+        response = self.get_data(call, endpoint)
         return response
     def ln_getinvoice(self, label):
         "label"
-        endpoint = "{}/ln_getinvoice/{}".format(self.url, label)
-        response = self.get_data(endpoint)
+        call = 'ln_getinvoice'
+        endpoint = "{}/{}/{}".format(self.url, call, label)
+        response = self.get_data(call, endpoint)
         return response
     # Post requests
     def watch(self, address, cburl0=None, cburl1=None, emsg=None):
         """address [unconfirmedCallbackURL confirmedCallbackURL eventMessage]"""
-        endpoint = "{}/watch".format(self.url)
+        call = 'watch'
+        endpoint = "{}/{}".format(self.url, call)
         payload = {"address":address, "unconfirmedCallbackURL":cburl0, "confirmedCallbackURL":cburl1, "eventMessage":emsg}
         payload = json.dumps(payload)
-        response = self.post_data(endpoint, payload)
+        response = self.post_data(call, endpoint, payload)
         return response
     def watchxpub(self, xpub, label=None, path="0/n", nstart=0, cburl0=None, cburl1=None): # "0/1/n" electrum = 0/n(receiving) 1/n(change)
         """xpub [label path nstart unconfirmedCallbackURL confirmedCallbackURL]"""
-        endpoint = "{}/watchxpub".format(self.url)
+        call = 'watchxpub'
+        endpoint = "{}/{}".format(self.url, call)
         payload = {"label":label, "pub32":xpub, "path":path, "nstart":int(nstart), "unconfirmedCallbackURL":cburl0, "confirmedCallbackURL":cburl1}
         payload = json.dumps(payload)
-        response = self.post_data(endpoint, payload)
+        response = self.post_data(call, endpoint, payload)
         return response
     def watchtxid(self, txid, cburl1=None, xcburl=None, xconf=6):############
         "txid [cburl xcburl xconf]"
-        endpoint = "{}/watchtxid".format(self.url)
+        call = 'watchtxid'
+        endpoint = "{}/{}".format(self.url, call)
         payload = {"txid":txid, "confirmedCallbackURL":cburl1, "xconfCallbackURL":xcburl, "nbxconf":int(xconf)}
         payload = json.dumps(payload)
-        response = self.post_data(endpoint, payload)
+        response = self.post_data(call, endpoint, payload)
         return response
     def spend(self, address, amount, emsg=None):
         """address amount [eventMessage]"""
-        endpoint = "{}/spend".format(self.url)
+        call = 'spend'
+        endpoint = "{}/{}".format(self.url, call)
         payload = {"address":address, "amount":amount, "eventMessage":emsg}
         payload = json.dumps(payload)
-        response = self.post_data(endpoint, payload)
+        response = self.post_data(call, endpoint, payload)
         return response
     def bumpfee(self, txid, conf_target):
         """txid confTarget"""
-        endpoint = "{}/bumpfee".format(self.url)
+        call = 'bumpfee'
+        endpoint = "{}/{}".format(self.url, call)
         payload = {"txid":txid, "confTarget":conf_target}
         payload = json.dumps(payload)
-        response = self.post_data(endpoint, payload)
+        response = self.post_data(call, endpoint, payload)
         return response
     def addtobatch(self, address, amount):
         """address amount"""
-        endpoint = "{}/addtobatch".format(self.url)
+        call = 'addtobatch'
+        endpoint = "{}/{}".format(self.url, call)
         payload = {"address":address, "amount":amount}
         payload = json.dumps(payload)
-        response = self.post_data(endpoint, payload)
+        response = self.post_data(call, endpoint, payload)
         return response
     def derivexpubpath(self, xpub, path):
         """xpub path"""
-        endpoint = "{}/derivexpubpath".format(self.url)
+        call = 'derivexpubpath'
+        endpoint = "{}/{}".format(self.url, call)
         payload = {"xpub":xpub, "path":path}
         payload = json.dumps(payload)
-        response = self.post_data(endpoint, payload)
+        response = self.post_data(call, endpoint, payload)
         return response
     def ln_create_invoice(self, msatoshi, label=None, description=None, cburl=None, expiry=900):
         """msatoshi [label description callbackUrl expiry]"""
-        endpoint = "{}/ln_create_invoice".format(self.url)
+        call = 'ln_create_invoice'
+        endpoint = "{}/{}".format(self.url, call)
         payload = {"msatoshi":msatoshi, "label":label, "description":description, "expiry":expiry, "callbackUrl":cburl}
         payload = json.dumps(payload)
-        response = self.post_data(endpoint, payload)
+        response = self.post_data(call, endpoint, payload)
         return response
     def ln_pay(self, bolt11, expected_msatoshi, expected_description):
         """bolt11 expected_msatoshi expected_description"""
-        endpoint = "{}/ln_pay".format(self.url)
+        call = 'ln_pay'
+        endpoint = "{}/{}".format(self.url, call)
         payload = {"bolt11":bolt11, "expected_msatoshi":expected_msatoshi, "expected_description":expected_description}
         payload = json.dumps(payload)
-        response = self.post_data(endpoint, payload)
+        response = self.post_data(call, endpoint, payload)
         return response
     def ln_connectfund(self, url, msatoshi, cburl=None):
         """peer msatoshi [callbackUrl]"""
-        endpoint = "{}/ln_connectfund".format(self.url)
+        call = 'ln_connectfund'
+        endpoint = "{}/{}".format(self.url, call)
         payload = {"peer":url, "msatoshi":msatoshi, "callbackUrl":cburl}
         payload = json.dumps(payload)
-        response = self.post_data(endpoint, payload)
+        response = self.post_data(call, endpoint, payload)
         return response
     def ots_stamp(self, hashing, cburl=None):
         """hash [callbackUrl]"""
-        endpoint = "{}/ots_stamp".format(self.url)
+        call = 'ots_stamp'
+        endpoint = "{}/{}".format(self.url, call)
         payload = {"hash":hashing, "callbackUrl":cburl}
         payload = json.dumps(payload)
-        response = self.post_data(endpoint, payload)
+        response = self.post_data(call, endpoint, payload)
         return response
     def ots_verify(self, hashing, otsfile):
         """hash base64otsfile"""
-        endpoint = "{}/ots_verify".format(self.url)
+        call = 'ots_verify'
+        endpoint = "{}/{}".format(self.url, call)
         payload = {"hash":hashing, "base64otsfile":otsfile}
         payload = json.dumps(payload)
-        response = self.post_data(endpoint, payload)
+        response = self.post_data(call, endpoint, payload)
         return response
     def ots_info(self, hashing=None, otsfile=None):
         """[hash base64otsfile]"""
-        endpoint = "{}/ots_info".format(self.url)
+        call = 'ots_info'
+        endpoint = "{}/{}".format(self.url, call)
         payload = {"hash":hashing, "base64otsfile":otsfile}
         payload = json.dumps(payload)
-        response = self.post_data(endpoint, payload)
+        response = self.post_data(call, endpoint, payload)
         return response
 """     # Callbacks requests
     def conf(self):##########

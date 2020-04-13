@@ -160,7 +160,6 @@ Command not working:
 
 - Add more security for storing the configuration file data
 - Fix not working things
-- Handle security level based on cyphernode id
 - Make request more low level. Use socket not requests lib
 - Add `CypherApp` for running code as a cypherapps using mqtt
 - Add error handling
