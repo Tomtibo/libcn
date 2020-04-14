@@ -30,7 +30,7 @@ class CypherNode:
         self.spender_cmd = ['gettxnslist', 'getbalance', 'getbalances', 'getbalancebyxpub', 'getbalancebyxpublabel', 'getnewaddress',\
             'spend', 'bumpfee', 'addtobatch', 'batchspend', 'deriveindex', 'derivexpubpath', 'ln_pay', 'ln_newaddr', 'ots_stamp',\
             'ots_getfile', 'ln_getinvoice', 'ln_decodebolt11', 'ln_connectfund']
-        #self.admin_cmd = ['conf', 'newblock', 'executecallbacks', 'ots_backoffice']
+        self.admin_cmd = ['conf', 'newblock', 'executecallbacks', 'ots_backoffice']
         self.all_cmd = []
         for itm in self.stats_cmd, self.watcher_cmd, self.spender_cmd: #, self.admin_cmd:
             for item in itm:
@@ -54,11 +54,11 @@ class CypherNode:
                     self.url = "{}".format(config.get(key, 'url')).replace('"', '')
             self.auth = []
             if self.cnid == '003':
-                for itm in self.stats_cmd, self.watcher_cmd, self.spender_cmd: #, self.admin_cmd:
+                for itm in self.stats_cmd, self.watcher_cmd, self.spender_cmd, self.admin_cmd:
                     for item in itm:
                         self.auth.append(item)
             elif self.cnid == '002':
-                for itm in self.stats_cmd, self.watcher_cmd, self.spender_cmd: #, self.admin_cmd:
+                for itm in self.stats_cmd, self.watcher_cmd, self.spender_cmd:
                     for item in itm:
                         self.auth.append(item)
             elif self.cnid == '001':
@@ -124,7 +124,6 @@ class CypherNode:
             return response
         else:
             raise ConnectionRefusedError
-            return 'Not authorised'
     def post_data(self, call, endpoint, payload):
         """Post data request"""
         if call in self.auth:
@@ -135,7 +134,6 @@ class CypherNode:
             return response
         else:
             raise ConnectionRefusedError
-            return 'Not authorised'
     # Get requests
     def getblockchaininfo(self):
         """Get blockchain information"""
@@ -427,28 +425,36 @@ class CypherNode:
         payload = json.dumps(payload)
         response = self.post_data(call, endpoint, payload)
         return response
-"""     # Callbacks requests
+    # Callbacks requests
     def conf(self):##########
-        Not working right now"
-        endpoint = "{}/conf".format(self.url)
-        response = self.get_data(endpoint)
-        return response
+        "Not working right now"
+        print("Not working right now")
+        #call = 'conf'
+        #endpoint = "{}/{}".format(self.url, call)
+        #response = self.get_data(call, endpoint)
+        #return response
     def newblock(self):##########
-        Not working right now"
-        endpoint = "{}/newblock".format(self.url)
-        response = self.get_data(endpoint)
-        return response
+        "Not working right now"
+        print("Not working right now")
+        #call = 'newblock'
+        #endpoint = "{}/{}".format(self.url, call)
+        #response = self.get_data(call, endpoint)
+        #return response
     def executecallbacks(self):###########
         "Not working right now"
-        endpoint = "{}/executecallbacks".format(self.url)
-        response = self.get_data(endpoint)
-        return response
+        print("Not working right now")
+        #call = 'executecallbacks'
+        #endpoint = "{}/{}".format(self.url, call)
+        #response = self.get_data(call, endpoint)
+        #return response
     def ots_backoffice(self):#########
-        Not working right now"
-        endpoint = "{}/ots_backoffice".format(self.url)
-        response = self.get_data(endpoint)
-        return response
- """
+        "Not working right now"
+        print("Not working right now")
+        #call = 'ots_backoffice'
+        #endpoint = "{}/{}".format(self.url, call)
+        #response = self.get_data(call, endpoint)
+        #return response
+
 class CallbackServer:
     """CallbackServer is a socket server used in a child class to
     listen incoming callbacks request"""
@@ -481,7 +487,7 @@ class CallbackServer:
             if recv_data:
                 data.outb += recv_data
             else:
-            #   print("closing connection to", data.addr)
+                #print("closing connection to", data.addr)
                 self.sel.unregister(sock)
                 sock.close()
         if mask & selectors.EVENT_WRITE:
