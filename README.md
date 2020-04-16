@@ -148,7 +148,6 @@ For now, libcn is a client library only, so it can not be used to handle callbac
 
 Command not working:
 - helloworld
-- watchtxid
 - gettxnslist
 - conf
 - newblock

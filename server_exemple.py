@@ -40,12 +40,14 @@ class WaitCallback(CallbackServer):
         print('Confirmation of adresse \'{}\' received {} at {} and the transaction fees is {}'.format(call['address'], amount, call['received'], fees))
 
     def txunconf(self, call):
-        "Do stuff with unconfirmed transation callbacks"
+        """Do stuff with unconfirmed transation callbacks
+        fields = ['id', 'txid', 'confirmations']"""
 
         print('Transaction non confirmé = {}'.format(call))
 
     def txconf(self, call):
-        "Do stuff with confirmed transaction callbacks"
+        """Do stuff with confirmed transaction callbacks"
+        fields = ['id', 'txid', 'confirmations']"""
 
         print('Transaction confirmé = {}'.format(call))
 

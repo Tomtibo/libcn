@@ -337,7 +337,7 @@ class CypherNode:
         payload = json.dumps(payload)
         response = self.post_data(call, endpoint, payload)
         return response
-    def watchtxid(self, txid, cburl1=None, xcburl=None, xconf=6):############
+    def watchtxid(self, txid, cburl1=None, xcburl=None, xconf=6):
         "txid [cburl xcburl xconf]"
         call = 'watchtxid'
         endpoint = "{}/{}".format(self.url, call)

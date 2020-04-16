@@ -37,7 +37,7 @@ def handle_cmdline_config(arg):
     conf.add_argument('--key', nargs=1, type=str, default=['None'], help='Set the cyphernode autorisation key')
     conf.add_argument('--url', nargs=1, type=str, default=['None'], help='Set the cyphernode URL')
 #    conf.add_argument('-h', '--help', help='Show this help message and exit')
-    conf.add_argument('-l', '--list', nargs=1, type=str, choices=['all', 'stats', 'watcher', 'spender'], help='List command available')
+    conf.add_argument('-l', '--list', nargs=1, type=str, choices=['all', 'stats', 'watcher', 'spender',' admin'], help='List command available')
     conf.add_argument('-i', '--info', nargs=1, type=str, metavar='COMMAND', help='Get command informations')
     # if configuration file exist, load it !
     if os.path.exists("{}/.cn/cn.conf".format(os.path.expanduser('~'))):
