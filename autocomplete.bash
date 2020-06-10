@@ -47,4 +47,9 @@ ln_connectfund
 conf
 newblock
 executecallbacks
-ots_backoffice""" cn cnt cnm cn-cli
+ots_backoffice
+ln_listpeers
+ln_listfunds
+ln_listpays
+ln_delinvoice
+ln_withdraw""" cn cnt cnm cn-cli

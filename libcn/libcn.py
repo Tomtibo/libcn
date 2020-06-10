@@ -30,12 +30,14 @@ class CypherNode:
                 'watchtxid', 'getactivewatches', 'get_txns_by_watchlabel',\
             'get_unused_addresses_by_watchlabel', 'getbestblockhash', \
                 'getbestblockinfo', 'getblockinfo', 'gettransaction',\
-            'ln_getinfo', 'ln_create_invoice', 'ln_getconnectionstring', 'ln_decodebolt11']
+            'ln_getinfo', 'ln_create_invoice', 'ln_getconnectionstring', \
+                'ln_decodebolt11', 'ln_listpeers', 'ln_listfunds', 'ln_listpays']
         self.spender_cmd = ['gettxnslist', 'getbalance', 'getbalances', \
             'getbalancebyxpub', 'getbalancebyxpublabel', 'getnewaddress',\
             'spend', 'bumpfee', 'addtobatch', 'batchspend', 'deriveindex', \
                 'derivexpubpath', 'ln_pay', 'ln_newaddr', 'ots_stamp',\
-            'ots_getfile', 'ln_getinvoice', 'ln_decodebolt11', 'ln_connectfund']
+            'ots_getfile', 'ln_getinvoice', 'ln_decodebolt11', 'ln_connectfund', \
+            'ln_delinvoice', 'ln_withdraw']
         self.admin_cmd = ['conf', 'newblock', 'executecallbacks', 'ots_backoffice']
         self.all_cmd = []
         for itm in self.stats_cmd, self.watcher_cmd, self.spender_cmd: #, self.admin_cmd:
@@ -74,7 +76,7 @@ class CypherNode:
             elif self.cnid == '000':
                 for itm in self.stats_cmd:
                     self.auth.append(itm)
-        except ConnectionRefusedError:
+        except ConnectionError:
             print('Authentification failed !')
             return None
         self.req = ['endpoint', 'headers=headers']
@@ -137,7 +139,7 @@ class CypherNode:
             else:
                 return None
         else:
-            raise ConnectionRefusedError
+            raise ConnectionError
     def post_data(self, call, endpoint, payload):
         """Post data request"""
         if call in self.auth:
@@ -150,7 +152,7 @@ class CypherNode:
             else:
                 return None
         else:
-            raise ConnectionRefusedError
+            raise ConnectionError
     # Get requests
     def getblockchaininfo(self):
         """Get blockchain information"""
@@ -206,6 +208,24 @@ class CypherNode:
         endpoint = "{}/{}".format(self.url, call)
         response = self.get_data(call, endpoint)
         return response
+    def ln_listpeers(self):
+        """Get a list of lighning peers"""
+        call = 'ln_listpeers'
+        endpoint = "{}/{}".format(self.url, call)
+        response = self.get_data(call, endpoint)
+        return response
+    def ln_listfunds(self):
+        """Get a list of funds"""
+        call = 'ln_listfunds'
+        endpoint = "{}/{}".format(self.url, call)
+        response = self.get_data(call, endpoint)
+        return response
+    def ln_listpays(self):
+        """Get a list of payed invoice"""
+        call = 'ln_listpays'
+        endpoint = "{}/{}".format(self.url, call)
+        response = self.get_data(call, endpoint)
+        return response
     def gettxnslist(self):################
         """Not working right now"""
         call = 'gettxnslist'
@@ -244,6 +264,15 @@ class CypherNode:
             endpoint = "{}/{}/{}".format(self.url, call, typeid)
         else:
             endpoint = "{}/{}".format(self.url, call)
+        response = self.get_data(call, endpoint)
+        return response
+    def ln_getroute(self, nodeid, msatoshi, *risk):
+        """Get lighning node route"""
+        call = 'ln_getroute'
+        if risk:
+            endpoint = "{}/{}/{}/{}/{}".format(self.url, call, nodeid, msatoshi, risk)
+        else:
+            endpoint = "{}/{}/{}/{}".format(self.url, call, nodeid, msatoshi)
         response = self.get_data(call, endpoint)
         return response
     # Get request with argument(s)
@@ -337,6 +366,12 @@ class CypherNode:
         endpoint = "{}/{}/{}".format(self.url, call, label)
         response = self.get_data(call, endpoint)
         return response
+    def ln_delinvoice(self, label):
+        "label"
+        call = 'ln_delinvoice'
+        endpoint = "{}/{}/{}".format(self.url, call, label)
+        response = self.get_data(call, endpoint)
+        return response
     # Post requests
     def watch(self, address, cburl0=None, cburl1=None, emsg=None):
         """address [unconfirmedCallbackURL confirmedCallbackURL eventMessage]"""
@@ -413,6 +448,15 @@ class CypherNode:
         endpoint = "{}/{}".format(self.url, call)
         payload = {"bolt11":bolt11, "expected_msatoshi":expected_msatoshi, \
             "expected_description":expected_description}
+        payload = json.dumps(payload)
+        response = self.post_data(call, endpoint, payload)
+        return response
+    def ln_withdraw(self, address, satoshi=None, feerate="normal", withdrawall="false"):
+        """Withdraw lightning node to a bitcoin address"""
+        call = 'ln_withdraw'
+        endpoint = "{}/{}".format(self.url, call)
+        payload = {"destination":address, "satoshi":satoshi, \
+            "feerate":feerate, "all":withdrawall}
         payload = json.dumps(payload)
         response = self.post_data(call, endpoint, payload)
         return response
