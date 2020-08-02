@@ -31,13 +31,13 @@ class CypherNode:
             'get_unused_addresses_by_watchlabel', 'getbestblockhash', \
                 'getbestblockinfo', 'getblockinfo', 'gettransaction',\
             'ln_getinfo', 'ln_create_invoice', 'ln_getconnectionstring', \
-                'ln_decodebolt11', 'ln_listpeers', 'ln_listfunds', 'ln_listpays']
-        self.spender_cmd = ['gettxnslist', 'getbalance', 'getbalances', \
+                'ln_decodebolt11', 'ln_listpeers', 'ln_getroute', 'ln_listpays']
+        self.spender_cmd = ['getbalance', 'getbalances', \
             'getbalancebyxpub', 'getbalancebyxpublabel', 'getnewaddress',\
             'spend', 'bumpfee', 'addtobatch', 'batchspend', 'deriveindex', \
-                'derivexpubpath', 'ln_pay', 'ln_newaddr', 'ots_stamp',\
+                'derivepubpath', 'ln_pay', 'ln_newaddr', 'ots_stamp',\
             'ots_getfile', 'ln_getinvoice', 'ln_decodebolt11', 'ln_connectfund', \
-            'ln_delinvoice', 'ln_withdraw']
+            'ln_delinvoice', 'ln_listfunds', 'ln_withdraw', 'get_txns_spending']
         self.admin_cmd = ['conf', 'newblock', 'executecallbacks', 'ots_backoffice']
         self.all_cmd = []
         for itm in self.stats_cmd, self.watcher_cmd, self.spender_cmd: #, self.admin_cmd:
@@ -226,12 +226,6 @@ class CypherNode:
         endpoint = "{}/{}".format(self.url, call)
         response = self.get_data(call, endpoint)
         return response
-    def gettxnslist(self):################
-        """Not working right now"""
-        call = 'gettxnslist'
-        endpoint = "{}/{}".format(self.url, call)
-        response = self.get_data(call, endpoint)
-        return response
     def getbalance(self):
         """Get spender wallet balance"""
         call = 'getbalance'
@@ -253,6 +247,12 @@ class CypherNode:
     def getactivexpubwatches(self):
         """Get a list of watched xpub"""
         call = 'getactivexpubwatches'
+        endpoint = "{}/{}".format(self.url, call)
+        response = self.get_data(call, endpoint)
+        return response
+    def get_txns_spending(self):
+        """Get transaction not spend from spending wallet"""
+        call = 'get_txns_spending'
         endpoint = "{}/{}".format(self.url, call)
         response = self.get_data(call, endpoint)
         return response
@@ -425,11 +425,11 @@ class CypherNode:
         payload = json.dumps(payload)
         response = self.post_data(call, endpoint, payload)
         return response
-    def derivexpubpath(self, xpub, path):
+    def derivepubpath(self, xpub, path):
         """xpub path"""
-        call = 'derivexpubpath'
+        call = 'derivepubpath'
         endpoint = "{}/{}".format(self.url, call)
-        payload = {"xpub":xpub, "path":path}
+        payload = {"pub32":xpub, "path":path}
         payload = json.dumps(payload)
         response = self.post_data(call, endpoint, payload)
         return response
@@ -452,7 +452,7 @@ class CypherNode:
         response = self.post_data(call, endpoint, payload)
         return response
     def ln_withdraw(self, address, satoshi=None, feerate="normal", withdrawall="false"):
-        """Withdraw lightning node to a bitcoin address"""
+        """address [satoshi feerate withdrawall]"""
         call = 'ln_withdraw'
         endpoint = "{}/{}".format(self.url, call)
         payload = {"destination":address, "satoshi":satoshi, \
@@ -521,7 +521,6 @@ class CypherNode:
         endpoint = "{}/{}".format(self.url, call)
         response = self.get_data(call, endpoint)
         return response
-
 class CallbackServer:
     """CallbackServer is a socket server used in a child class to
     listen incoming callbacks request"""

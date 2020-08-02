@@ -25,7 +25,7 @@ def main(arg):
         print(token)
     if resp:
         if conf['json'] == True:
-            print(json.dumps(resp, indent=2, sort_keys=True))
+            print(json.dumps(resp, indent=2, sort_keys=False))
         else:
             print(json.dumps(resp))
 def handle_cmdline_config(arg):
