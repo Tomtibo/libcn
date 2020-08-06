@@ -258,7 +258,8 @@ class CypherNode:
         return response
     # Get requests with optional argument
     def getnewaddress(self, *typeid):
-        """Get new address"""
+        """Get new spending address
+        [addressType(bech32,legacy,p2sh-segwit)]"""
         call = 'getnewaddress'
         if typeid:
             endpoint = "{}/{}/{}".format(self.url, call, typeid)
@@ -275,11 +276,29 @@ class CypherNode:
             endpoint = "{}/{}/{}/{}".format(self.url, call, nodeid, msatoshi)
         response = self.get_data(call, endpoint)
         return response
+    def get_txns_by_watchlabel(self, label, *count):
+        "label [count]"
+        call = 'get_txns_by_watchlabel'
+        if count:
+            endpoint = "{}/{}/{}/{}".format(self.url, call, label, count)
+        else:
+            endpoint = "{}/{}/{}".format(self.url, call, label)
+        response = self.get_data(call, endpoint)
+        return response
+    def get_unused_addresses_by_watchlabel(self, label, *count):
+        "label [count]"
+        call = 'get_unused_addresses_by_watchlabel'
+        if count:
+            endpoint = "{}/{}/{}/{}".format(self.url, call, label, count)
+        else:
+            endpoint = "{}/{}/{}".format(self.url, call, label)
+        response = self.get_data(call, endpoint)
+        return response
     # Get request with argument(s)
-    def getblockhash(self):
-        "hashing"
+    def getblockhash(self, height): ## Return a string not a json
+        "height"
         call = 'getblockhash'
-        endpoint = "{}/{}".format(self.url, call)
+        endpoint = "{}/{}/{}".format(self.url, call, height)
         response = self.get_data(call, endpoint)
         return response
     def unwatch(self, address):
@@ -309,18 +328,6 @@ class CypherNode:
     def getactivewatchesbylabel(self, label):
         "label"
         call = 'getactivewatchesbylabel'
-        endpoint = "{}/{}/{}".format(self.url, call, label)
-        response = self.get_data(call, endpoint)
-        return response
-    def get_txns_by_watchlabel(self, label):
-        "label"
-        call = 'get_txns_by_watchlabel'
-        endpoint = "{}/{}/{}".format(self.url, call, label)
-        response = self.get_data(call, endpoint)
-        return response
-    def get_unused_addresses_by_watchlabel(self, label):
-        "label"
-        call = 'get_unused_addresses_by_watchlabel'
         endpoint = "{}/{}/{}".format(self.url, call, label)
         response = self.get_data(call, endpoint)
         return response
