@@ -464,7 +464,7 @@ class CallbackServer:
     def accept_wrapper(self, sock):
         """Accept incoming connections"""
         conn, addr = sock.accept()
-        #print("accepted connection from", addr)
+        print("accepted connection from", addr)
         conn.setblocking(False)
         data = types.SimpleNamespace(addr=addr, inb=b"", outb=b"")
         events = selectors.EVENT_READ | selectors.EVENT_WRITE
@@ -487,19 +487,19 @@ class CallbackServer:
             if recv_data:
                 data.outb += recv_data
             else:
-                #print("closing connection to", data.addr)
+                print("closing connection to", data.addr)
                 self.sel.unregister(sock)
                 sock.close()
         if mask & selectors.EVENT_WRITE:
             if data.outb:
                 request = None
                 callback = None
-                #print('Data = {}'.format(data.outb))
+                print('Data = {}'.format(data.outb))
                 requestRe = re.compile(b'POST\ \/(.*)\ ')
                 if requestRe.search(data.outb):
                     request = requestRe.search(data.outb).group(1)
                     request = request.decode('utf-8')
-                    #print('request = {}'.format(request))
+                    print('request = {}'.format(request))
                 jsonRe = re.compile(b'{(.*)}')
                 if jsonRe.search(data.outb):
                     callback = jsonRe.search(data.outb).group(1)
@@ -507,7 +507,7 @@ class CallbackServer:
                     callback = '{}{}{}'.format("{", callback, "}")
                     callback = json.loads(callback)
                     callback = json.dumps(callback)
-                    #print(callback)
+                    print(callback)
                 if request and callback:
                         try:
                             response = eval('self.{}({})'.format(request, callback))
@@ -538,7 +538,7 @@ class CallbackServer:
             while True:
                 events = self.sel.select(timeout=None)
                 for key, mask in events:
-                    #print('{} = {}'.format(key, mask))
+                    print('{} = {}'.format(key, mask))
                     if key.data is None:
                         self.accept_wrapper(key.fileobj)
                     else:
