@@ -144,11 +144,8 @@ For a full exemple of how to use `CallbackServer`, see the server_exemple.py fil
 
 **Things that do not work**
 
-For now, libcn is a client library only, so it can not be used to handle callbacks.
-
 Command not working:
-- helloworld
-- gettxnslist
+- helloworld ## helloworld call do not return a json object
 - conf
 - newblock
 - executecallbacks
@@ -159,7 +156,6 @@ Command not working:
 
 - Add more security for storing the configuration file data
 - Fix not working things
-- Make request more low level. Use socket not requests lib
 - Add `CypherApp` for running code as a cypherapps using mqtt
 - Add error handling
 - Add logging

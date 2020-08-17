@@ -1,19 +1,19 @@
+"""libcn is a client and server library for cyphernode"""
 import base64
 import json
 import hashlib
 import hmac
 import configparser
-import sys
 import re
 import os
-import requests
-import socket
 import selectors
 import types
-import urllib3
 import time
-
+import socket
+import requests
+import urllib3
 class CypherNode:
+    """CypherNode class is a cyphernode client library"""
     def __init__(self, \
         cnid=None, \
         key=None, \
@@ -22,14 +22,22 @@ class CypherNode:
         unsecure=False, \
         verbose=False):
         """Cyphernode object reprensenting a cyphernode server"""
-        self.stats_cmd = ['getblockchaininfo', 'getblockhash', 'helloworld', 'installation_info', 'getmempoolinfo']
-        self.watcher_cmd = ['watch', 'unwatch', 'watchxpub', 'unwatchxpubbyxpub', 'unwatchxpubbylabel', 'getactivewatchesbyxpub',\
-            'getactivewatchesbylabel', 'getactivexpubwatches', 'watchtxid', 'getactivewatches', 'get_txns_by_watchlabel',\
-            'get_unused_addresses_by_watchlabel', 'getbestblockhash', 'getbestblockinfo', 'getblockinfo', 'gettransaction',\
-            'ln_getinfo', 'ln_create_invoice', 'ln_getconnectionstring', 'ln_decodebolt11']
-        self.spender_cmd = ['gettxnslist', 'getbalance', 'getbalances', 'getbalancebyxpub', 'getbalancebyxpublabel', 'getnewaddress',\
-            'spend', 'bumpfee', 'addtobatch', 'batchspend', 'deriveindex', 'derivexpubpath', 'ln_pay', 'ln_newaddr', 'ots_stamp',\
-            'ots_getfile', 'ln_getinvoice', 'ln_decodebolt11', 'ln_connectfund']
+        self.stats_cmd = ['getblockchaininfo', 'getblockhash', \
+            'helloworld', 'installation_info', 'getmempoolinfo']
+        self.watcher_cmd = ['watch', 'unwatch', 'watchxpub', \
+            'unwatchxpubbyxpub', 'unwatchxpubbylabel', 'getactivewatchesbyxpub',\
+            'getactivewatchesbylabel', 'getactivexpubwatches', \
+                'watchtxid', 'getactivewatches', 'get_txns_by_watchlabel',\
+            'get_unused_addresses_by_watchlabel', 'getbestblockhash', \
+                'getbestblockinfo', 'getblockinfo', 'gettransaction',\
+            'ln_getinfo', 'ln_create_invoice', 'ln_getconnectionstring', \
+                'ln_decodebolt11', 'ln_listpeers', 'ln_getroute', 'ln_listpays']
+        self.spender_cmd = ['getbalance', 'getbalances', \
+            'getbalancebyxpub', 'getbalancebyxpublabel', 'getnewaddress',\
+            'spend', 'bumpfee', 'addtobatch', 'batchspend', 'deriveindex', \
+                'derivepubpath', 'ln_pay', 'ln_newaddr', 'ots_stamp',\
+            'ots_getfile', 'ln_getinvoice', 'ln_decodebolt11', 'ln_connectfund', \
+            'ln_delinvoice', 'ln_listfunds', 'ln_withdraw', 'get_txns_spending']
         self.admin_cmd = ['conf', 'newblock', 'executecallbacks', 'ots_backoffice']
         self.all_cmd = []
         for itm in self.stats_cmd, self.watcher_cmd, self.spender_cmd: #, self.admin_cmd:
@@ -68,7 +76,7 @@ class CypherNode:
             elif self.cnid == '000':
                 for itm in self.stats_cmd:
                     self.auth.append(itm)
-        except ConnectionRefusedError:
+        except ConnectionError:
             print('Authentification failed !')
             return None
         self.req = ['endpoint', 'headers=headers']
@@ -88,16 +96,18 @@ class CypherNode:
         return info_resp
     def listing(self, category):
         """Listing command"""
-        for itm in eval('self.{}_cmd'.format(category)):
-            print(itm)
-        return
+        if eval('self.{}_cmd'.format(category)):
+            for itm in eval('self.{}_cmd'.format(category)):
+                print(itm)
     def verbose(self):
+        """Verbose mode"""
         for key in dir(self):
             key_re = re.compile(r'__(.*)__')
             if not key_re.search(key):
                 value = "self.{}".format(key)
                 print("{} = {}".format(key, eval(value)))
     def get_token(self):
+        """Token encoding"""
         token = None
         expire = round(time.time()) + 10
         p64 = {}
@@ -107,33 +117,42 @@ class CypherNode:
         cv_p64 = base64.encodestring(bytes_p64)
         encoded_p64 = cv_p64.decode('utf-8').replace('\n', '')
         msg = '{}.{}'.format(self.h64, encoded_p64)
-        sms = '{}'.format(hmac.new(key=self.key.encode('utf-8'), msg=msg.encode('utf-8'), digestmod=hashlib.sha256).hexdigest())
+        sms = '{}'.format(hmac.new(key=self.key.encode('utf-8'), \
+            msg=msg.encode('utf-8'), digestmod=hashlib.sha256).hexdigest())
         token = "{}.{}.{}".format(self.h64, encoded_p64, sms)
         return token
     def get_headers(self):
         """Get autorisation headers"""
-        headers = {"Authorization": "Bearer {}".format(self.get_token())}
+        headers = {}
+        headers["Content-Type"] = "application/json"
+        headers["Authorization"] = "Bearer {}".format(self.get_token())
         return headers
     # Handle requests
     def get_data(self, call, endpoint):
         """Get data request"""
         if call in self.auth:
             headers = self.get_headers()
-            request = "self.requests.get{}.json()".format(tuple(self.req)).replace('\'', '')
-            response = eval(request)
-            return response
+            if headers and endpoint:
+                request = "self.requests.get{}.json()".format(tuple(self.req)).replace('\'', '')
+                response = eval(request)
+                return response
+            else:
+                return None
         else:
-            raise ConnectionRefusedError
+            raise ConnectionError
     def post_data(self, call, endpoint, payload):
         """Post data request"""
         if call in self.auth:
             headers = self.get_headers()
-            self.req.append('data=payload')
-            request = "self.requests.post{}.json()".format(tuple(self.req)).replace('\'', '')
-            response = eval(request)
-            return response
+            if headers and endpoint and payload:
+                self.req.append('data=payload')
+                request = "self.requests.post{}.json()".format(tuple(self.req)).replace('\'', '')
+                response = eval(request)
+                return response
+            else:
+                return None
         else:
-            raise ConnectionRefusedError
+            raise ConnectionError
     # Get requests
     def getblockchaininfo(self):
         """Get blockchain information"""
@@ -189,9 +208,21 @@ class CypherNode:
         endpoint = "{}/{}".format(self.url, call)
         response = self.get_data(call, endpoint)
         return response
-    def gettxnslist(self):################
-        """Not working right now"""
-        call = 'gettxnslist'
+    def ln_listpeers(self):
+        """Get a list of lighning peers"""
+        call = 'ln_listpeers'
+        endpoint = "{}/{}".format(self.url, call)
+        response = self.get_data(call, endpoint)
+        return response
+    def ln_listfunds(self):
+        """Get a list of funds"""
+        call = 'ln_listfunds'
+        endpoint = "{}/{}".format(self.url, call)
+        response = self.get_data(call, endpoint)
+        return response
+    def ln_listpays(self):
+        """Get a list of payed invoice"""
+        call = 'ln_listpays'
         endpoint = "{}/{}".format(self.url, call)
         response = self.get_data(call, endpoint)
         return response
@@ -219,9 +250,16 @@ class CypherNode:
         endpoint = "{}/{}".format(self.url, call)
         response = self.get_data(call, endpoint)
         return response
+    def get_txns_spending(self):
+        """Get transaction not spend from spending wallet"""
+        call = 'get_txns_spending'
+        endpoint = "{}/{}".format(self.url, call)
+        response = self.get_data(call, endpoint)
+        return response
     # Get requests with optional argument
     def getnewaddress(self, *typeid):
-        """Get new address"""
+        """Get new spending address
+        [addressType(bech32,legacy,p2sh-segwit)]"""
         call = 'getnewaddress'
         if typeid:
             endpoint = "{}/{}/{}".format(self.url, call, typeid)
@@ -229,11 +267,38 @@ class CypherNode:
             endpoint = "{}/{}".format(self.url, call)
         response = self.get_data(call, endpoint)
         return response
+    def ln_getroute(self, nodeid, msatoshi, *risk):
+        """Get lighning node route"""
+        call = 'ln_getroute'
+        if risk:
+            endpoint = "{}/{}/{}/{}/{}".format(self.url, call, nodeid, msatoshi, risk)
+        else:
+            endpoint = "{}/{}/{}/{}".format(self.url, call, nodeid, msatoshi)
+        response = self.get_data(call, endpoint)
+        return response
+    def get_txns_by_watchlabel(self, label, *count):
+        "label [count]"
+        call = 'get_txns_by_watchlabel'
+        if count:
+            endpoint = "{}/{}/{}/{}".format(self.url, call, label, count)
+        else:
+            endpoint = "{}/{}/{}".format(self.url, call, label)
+        response = self.get_data(call, endpoint)
+        return response
+    def get_unused_addresses_by_watchlabel(self, label, *count):
+        "label [count]"
+        call = 'get_unused_addresses_by_watchlabel'
+        if count:
+            endpoint = "{}/{}/{}/{}".format(self.url, call, label, count)
+        else:
+            endpoint = "{}/{}/{}".format(self.url, call, label)
+        response = self.get_data(call, endpoint)
+        return response
     # Get request with argument(s)
-    def getblockhash(self):
-        "hashing"
+    def getblockhash(self, height): ## Return a string not a json
+        "height"
         call = 'getblockhash'
-        endpoint = "{}/{}".format(self.url, call)
+        endpoint = "{}/{}/{}".format(self.url, call, height)
         response = self.get_data(call, endpoint)
         return response
     def unwatch(self, address):
@@ -263,18 +328,6 @@ class CypherNode:
     def getactivewatchesbylabel(self, label):
         "label"
         call = 'getactivewatchesbylabel'
-        endpoint = "{}/{}/{}".format(self.url, call, label)
-        response = self.get_data(call, endpoint)
-        return response
-    def get_txns_by_watchlabel(self, label):
-        "label"
-        call = 'get_txns_by_watchlabel'
-        endpoint = "{}/{}/{}".format(self.url, call, label)
-        response = self.get_data(call, endpoint)
-        return response
-    def get_unused_addresses_by_watchlabel(self, label):
-        "label"
-        call = 'get_unused_addresses_by_watchlabel'
         endpoint = "{}/{}/{}".format(self.url, call, label)
         response = self.get_data(call, endpoint)
         return response
@@ -320,20 +373,29 @@ class CypherNode:
         endpoint = "{}/{}/{}".format(self.url, call, label)
         response = self.get_data(call, endpoint)
         return response
+    def ln_delinvoice(self, label):
+        "label"
+        call = 'ln_delinvoice'
+        endpoint = "{}/{}/{}".format(self.url, call, label)
+        response = self.get_data(call, endpoint)
+        return response
     # Post requests
     def watch(self, address, cburl0=None, cburl1=None, emsg=None):
         """address [unconfirmedCallbackURL confirmedCallbackURL eventMessage]"""
         call = 'watch'
         endpoint = "{}/{}".format(self.url, call)
-        payload = {"address":address, "unconfirmedCallbackURL":cburl0, "confirmedCallbackURL":cburl1, "eventMessage":emsg}
+        payload = {"address":address, "unconfirmedCallbackURL":cburl0, \
+            "confirmedCallbackURL":cburl1, "eventMessage":emsg}
         payload = json.dumps(payload)
         response = self.post_data(call, endpoint, payload)
         return response
-    def watchxpub(self, xpub, label=None, path="0/n", nstart=0, cburl0=None, cburl1=None): # "0/1/n" electrum = 0/n(receiving) 1/n(change)
+    def watchxpub(self, xpub, label=None, path="0/n", \
+        nstart=0, cburl0=None, cburl1=None): # "0/1/n" electrum = 0/n(receiving) 1/n(change)
         """xpub [label path nstart unconfirmedCallbackURL confirmedCallbackURL]"""
         call = 'watchxpub'
         endpoint = "{}/{}".format(self.url, call)
-        payload = {"label":label, "pub32":xpub, "path":path, "nstart":int(nstart), "unconfirmedCallbackURL":cburl0, "confirmedCallbackURL":cburl1}
+        payload = {"label":label, "pub32":xpub, "path":path, "nstart":int(nstart), \
+            "unconfirmedCallbackURL":cburl0, "confirmedCallbackURL":cburl1}
         payload = json.dumps(payload)
         response = self.post_data(call, endpoint, payload)
         return response
@@ -341,7 +403,8 @@ class CypherNode:
         "txid [cburl xcburl xconf]"
         call = 'watchtxid'
         endpoint = "{}/{}".format(self.url, call)
-        payload = {"txid":txid, "confirmedCallbackURL":cburl1, "xconfCallbackURL":xcburl, "nbxconf":int(xconf)}
+        payload = {"txid":txid, "confirmedCallbackURL":cburl1, \
+            "xconfCallbackURL":xcburl, "nbxconf":int(xconf)}
         payload = json.dumps(payload)
         response = self.post_data(call, endpoint, payload)
         return response
@@ -369,11 +432,11 @@ class CypherNode:
         payload = json.dumps(payload)
         response = self.post_data(call, endpoint, payload)
         return response
-    def derivexpubpath(self, xpub, path):
+    def derivepubpath(self, xpub, path):
         """xpub path"""
-        call = 'derivexpubpath'
+        call = 'derivepubpath'
         endpoint = "{}/{}".format(self.url, call)
-        payload = {"xpub":xpub, "path":path}
+        payload = {"pub32":xpub, "path":path}
         payload = json.dumps(payload)
         response = self.post_data(call, endpoint, payload)
         return response
@@ -381,7 +444,8 @@ class CypherNode:
         """msatoshi [label description callbackUrl expiry]"""
         call = 'ln_create_invoice'
         endpoint = "{}/{}".format(self.url, call)
-        payload = {"msatoshi":msatoshi, "label":label, "description":description, "expiry":expiry, "callbackUrl":cburl}
+        payload = {"msatoshi":msatoshi, "label":label, "description":description, \
+            "expiry":expiry, "callbackUrl":cburl}
         payload = json.dumps(payload)
         response = self.post_data(call, endpoint, payload)
         return response
@@ -389,7 +453,17 @@ class CypherNode:
         """bolt11 expected_msatoshi expected_description"""
         call = 'ln_pay'
         endpoint = "{}/{}".format(self.url, call)
-        payload = {"bolt11":bolt11, "expected_msatoshi":expected_msatoshi, "expected_description":expected_description}
+        payload = {"bolt11":bolt11, "expected_msatoshi":expected_msatoshi, \
+            "expected_description":expected_description}
+        payload = json.dumps(payload)
+        response = self.post_data(call, endpoint, payload)
+        return response
+    def ln_withdraw(self, address, satoshi=None, feerate="normal", withdrawall="false"):
+        """address [satoshi feerate withdrawall]"""
+        call = 'ln_withdraw'
+        endpoint = "{}/{}".format(self.url, call)
+        payload = {"destination":address, "satoshi":satoshi, \
+            "feerate":feerate, "all":withdrawall}
         payload = json.dumps(payload)
         response = self.post_data(call, endpoint, payload)
         return response
@@ -429,32 +503,31 @@ class CypherNode:
     def conf(self):##########
         "Not working right now"
         print("Not working right now")
-        #call = 'conf'
-        #endpoint = "{}/{}".format(self.url, call)
-        #response = self.get_data(call, endpoint)
-        #return response
+        call = 'conf'
+        endpoint = "{}/{}".format(self.url, call)
+        response = self.get_data(call, endpoint)
+        return response
     def newblock(self):##########
         "Not working right now"
         print("Not working right now")
-        #call = 'newblock'
-        #endpoint = "{}/{}".format(self.url, call)
-        #response = self.get_data(call, endpoint)
-        #return response
+        call = 'newblock'
+        endpoint = "{}/{}".format(self.url, call)
+        response = self.get_data(call, endpoint)
+        return response
     def executecallbacks(self):###########
         "Not working right now"
         print("Not working right now")
-        #call = 'executecallbacks'
-        #endpoint = "{}/{}".format(self.url, call)
-        #response = self.get_data(call, endpoint)
-        #return response
+        call = 'executecallbacks'
+        endpoint = "{}/{}".format(self.url, call)
+        response = self.get_data(call, endpoint)
+        return response
     def ots_backoffice(self):#########
         "Not working right now"
         print("Not working right now")
-        #call = 'ots_backoffice'
-        #endpoint = "{}/{}".format(self.url, call)
-        #response = self.get_data(call, endpoint)
-        #return response
-
+        call = 'ots_backoffice'
+        endpoint = "{}/{}".format(self.url, call)
+        response = self.get_data(call, endpoint)
+        return response
 class CallbackServer:
     """CallbackServer is a socket server used in a child class to
     listen incoming callbacks request"""
@@ -471,13 +544,14 @@ class CallbackServer:
         self.sel.register(conn, events, data=data)
     def get_headers(self, response_code, lenght):
         """Build response headers"""
-        header = ''
+        headers = ''
         if response_code == 200:
-            header += 'HTTP/1.1 200 OK\n'
+            headers += 'HTTP/1.1 200 OK\n'
         elif response_code == 404:
-            header += 'HTTP/1.1 404 Not Found\n'
-        header += 'Content-Length: {}\n\n'.format(lenght)
-        return header
+            headers += 'HTTP/1.1 404 Not Found\n'
+        headers += "Content-Type: application/json\n"
+        headers += 'Content-Length: {}\n\n'.format(lenght)
+        return headers
     def service_connection(self, key, mask):
         """Execute actions on incomming callbacks"""
         sock = key.fileobj
@@ -493,36 +567,36 @@ class CallbackServer:
         if mask & selectors.EVENT_WRITE:
             if data.outb:
                 request = None
-                callback = None
-                print('Data = {}'.format(data.outb))
-                requestRe = re.compile(b'POST\ \/(.*)\ ')
-                if requestRe.search(data.outb):
-                    request = requestRe.search(data.outb).group(1)
+                self.callback = None
+                #print('Data = {}'.format(data.outb))
+                request_re = re.compile(b'POST /(.*) ')
+                if request_re.search(data.outb):
+                    request = request_re.search(data.outb).group(1)
                     request = request.decode('utf-8')
-                    print('request = {}'.format(request))
-                jsonRe = re.compile(b'{(.*)}')
-                if jsonRe.search(data.outb):
-                    callback = jsonRe.search(data.outb).group(1)
-                    callback = callback.decode('utf-8')
-                    callback = '{}{}{}'.format("{", callback, "}")
-                    callback = json.loads(callback)
-                    callback = json.dumps(callback)
-                    print(callback)
-                if request and callback:
-                        try:
-                            response = eval('self.{}({})'.format(request, callback))
-                            if not response:
-                                response = 'True'
-                            leng = len(response)
-                            headers = self.get_headers(200, leng)
-                            sent = sock.send(bytes('{}{}'.format(headers, response).encode('utf-8')))
-                            data.outb = data.outb[sent:]
-                        except ChildProcessError:
-                            response = 'False'
-                            leng = len(response)
-                            headers = self.get_headers(404, leng)
-                            sent = sock.send(bytes('{}{}'.format(headers, response).encode('utf-8')))
-                            data.outb = data.outb[sent:]
+                    #print('request = {}'.format(request))
+                json_re = re.compile(b'{(.*)}')
+                if json_re.search(data.outb):
+                    self.callback = json_re.search(data.outb).group(1)
+                    self.callback = self.callback.decode('utf-8')
+                    self.callback = '{}{}{}'.format("{", self.callback, "}")
+                    self.callback = json.loads(self.callback)
+                    self.callback = json.dumps(self.callback)
+                    #print(callback)
+                if request:
+                    try:
+                        response = eval('self.{}()'.format(request))
+                        if not response:
+                            response = 'True'
+                        leng = len(response)
+                        headers = self.get_headers(200, leng)
+                        sent = sock.send(bytes('{}{}'.format(headers, response).encode('utf-8')))
+                        data.outb = data.outb[sent:]
+                    except ChildProcessError:
+                        response = 'False'
+                        leng = len(response)
+                        headers = self.get_headers(404, leng)
+                        sent = sock.send(bytes('{}{}'.format(headers, response).encode('utf-8')))
+                        data.outb = data.outb[sent:]
     def start(self):
         """CallbacksServer main process to start listen"""
         host = ''

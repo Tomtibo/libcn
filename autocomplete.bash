@@ -16,6 +16,7 @@ getactivexpubwatches
 watchtxid
 getactivewatches
 get_txns_by_watchlabel
+get_txns_spending
 get_unused_addresses_by_watchlabel
 getbestblockhash
 getbestblockinfo
@@ -25,7 +26,6 @@ ln_getinfo
 ln_create_invoice
 ln_getconnectionstring
 ln_decodebolt11
-gettxnslist
 getbalance
 getbalances
 getbalancebyxpub
@@ -36,7 +36,7 @@ bumpfee
 addtobatch
 batchspend
 deriveindex
-derivexpubpath
+derivepubpath
 ln_pay
 ln_newaddr
 ots_stamp
@@ -47,4 +47,9 @@ ln_connectfund
 conf
 newblock
 executecallbacks
-ots_backoffice""" cn cnt cnm cn-cli
+ots_backoffice
+ln_listpeers
+ln_listfunds
+ln_listpays
+ln_delinvoice
+ln_withdraw""" cn cnt cnm cn-cli

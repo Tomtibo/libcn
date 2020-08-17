@@ -19,7 +19,6 @@ setuptools.setup(
         'configparser',
         'requests',
         'urllib3',
-        'paho.mqtt.client',
     ],
     classifiers = [
         "Programming Language :: Python :: 3",
