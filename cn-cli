@@ -4,31 +4,28 @@ import os
 import json
 import sys
 from libcn.libcn import CypherNode
-def main(arg):
-    conf = handle_cmdline_config(arg)
-#    for item in conf.items():
-#        print(item)
-    cn = CypherNode(cnid=conf['cnid'][0], key=conf['key'][0], url=conf['url'][0], unsecure=conf['unsecure'], verbose=conf['verbose'], configfile=conf['config_file'])
+def main(conf):
+    cn = CypherNode(cnid=conf.cnid[0], key=conf.key[0], url=conf.url[0], unsecure=conf.unsecure, verbose=conf.verbose, configfile=conf.configfile)
     resp = None
-    if conf['args']:
-        resp = eval('cn.{}{}'.format(conf['command'], tuple(conf['args'])))
-    elif not conf['args']:
-        if conf['command']:
-            resp = eval('cn.{}()'.format(conf['command']))
-    if conf['info']:
-        data = cn.inform(conf['info'][0])
+    if conf.arguments:
+        resp = eval('cn.{}{}'.format(conf.command, tuple(conf.args)))
+    elif not conf.arguments:
+        if conf.command:
+            resp = eval('cn.{}()'.format(conf.command))
+    if conf.info:
+        data = cn.inform(conf.info[0])
         print(data)
-    if conf['list']:
-        cn.listing(conf['list'][0])
-    if conf['token']:
+    if conf.list:
+        cn.listing(conf.list[0])
+    if conf.token:
         token = cn.get_token()
         print(token)
     if resp:
-        if conf['json'] == True:
+        if conf.json == True:
             print(json.dumps(resp, indent=2, sort_keys=False))
         else:
             print(json.dumps(resp))
-def handle_cmdline_config(arg):
+if __name__=='__main__':
     conf = argparse.ArgumentParser()
 #    config_file
     conf.add_argument('command', nargs='?', help='Command')
@@ -48,21 +45,5 @@ def handle_cmdline_config(arg):
     conf.add_argument('-j', '--json', action="store_true", default=None, help='Use json indentation formating')
     conf.add_argument('-t', '--token', action="store_true", default=None, help='Generate and return autorisation token')
     conf.add_argument('-v', '--verbose', action="store_true", help='Use verbose mode')
-    args = conf.parse_args(arg)
-    hcc = {}
-    hcc['config_file'] = args.configfile
-    hcc['unsecure'] = args.unsecure
-    hcc['list'] = args.list
-    hcc['json'] = args.json
-    hcc['info'] = args.info
-    hcc['token'] = args.token
-    hcc['verbose'] = args.verbose
-    hcc['command'] = args.command
-    hcc['args'] = args.arguments
-    hcc['cnid'] = args.cnid
-    hcc['key'] = args.key
-    hcc['url'] = args.url
-    hcc['response'] = None
-    return hcc
-if __name__=='__main__':
-    main(sys.argv[1:])
+    args = conf.parse_args(sys.argv[1:])
+    main(args)
