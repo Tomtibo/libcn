@@ -35,7 +35,7 @@ class CypherNode:
         self.spender_cmd = ['getbalance', 'getbalances', \
             'getbalancebyxpub', 'getbalancebyxpublabel', 'getnewaddress',\
             'spend', 'bumpfee', 'addtobatch', 'batchspend', 'deriveindex', \
-                'derivepubpath', 'ln_pay', 'ln_newaddr', 'ots_stamp',\
+                'derivepubpath', 'ln_pay', 'ln_newaddr', 'ots_stamp', 'ots_info', 'ots_verify',\
             'ots_getfile', 'ln_getinvoice', 'ln_decodebolt11', 'ln_connectfund', \
             'ln_delinvoice', 'ln_listfunds', 'ln_withdraw', 'get_txns_spending']
         self.admin_cmd = ['conf', 'newblock', 'executecallbacks', 'ots_backoffice']
@@ -167,7 +167,7 @@ class CypherNode:
         response = self.get_data(call, endpoint)
         return response
     def helloworld(self): ###############
-        """Not working right now"""
+        """Working but returning error because not json format"""
         call = 'helloworld'
         endpoint = "{}/{}".format(self.url, call)
         response = self.get_data(call, endpoint)
@@ -362,7 +362,7 @@ class CypherNode:
         response = self.get_data(call, endpoint)
         return response
     def ots_getfile(self, hashing):
-        "label"
+        "hash"
         call = 'ots_getfile'
         endpoint = "{}/{}/{}".format(self.url, call, hashing)
         response = self.get_data(call, endpoint)
@@ -483,19 +483,25 @@ class CypherNode:
         payload = json.dumps(payload)
         response = self.post_data(call, endpoint, payload)
         return response
-    def ots_verify(self, hashing, otsfile):
-        """hash base64otsfile"""
+    def ots_verify(self, hashing, *base64otsfile):
+        """hash [base64otsfile]"""
         call = 'ots_verify'
         endpoint = "{}/{}".format(self.url, call)
-        payload = {"hash":hashing, "base64otsfile":otsfile}
+        if base64otsfile:
+            payload = {"hash":hashing, "base64otsfile":base64otsfile}
+        else:
+            payload = {"hash":hashing}
         payload = json.dumps(payload)
         response = self.post_data(call, endpoint, payload)
         return response
-    def ots_info(self, hashing=None, otsfile=None):
-        """[hash base64otsfile]"""
+    def ots_info(self, hashing=None, *base64otsfile):
+        """[hash [base64otsfile]"""
         call = 'ots_info'
         endpoint = "{}/{}".format(self.url, call)
-        payload = {"hash":hashing, "base64otsfile":otsfile}
+        if base64otsfile:
+            payload = {"hash":hashing, "base64otsfile":base64otsfile}
+        else:
+            payload = {"hash":hashing}
         payload = json.dumps(payload)
         response = self.post_data(call, endpoint, payload)
         return response
@@ -537,7 +543,7 @@ class CallbackServer:
     def accept_wrapper(self, sock):
         """Accept incoming connections"""
         conn, addr = sock.accept()
-        print("accepted connection from", addr)
+        #print("accepted connection from", addr)
         conn.setblocking(False)
         data = types.SimpleNamespace(addr=addr, inb=b"", outb=b"")
         events = selectors.EVENT_READ | selectors.EVENT_WRITE
@@ -561,7 +567,7 @@ class CallbackServer:
             if recv_data:
                 data.outb += recv_data
             else:
-                print("closing connection to", data.addr)
+                #print("closing connection to", data.addr)
                 self.sel.unregister(sock)
                 sock.close()
         if mask & selectors.EVENT_WRITE:
@@ -612,7 +618,7 @@ class CallbackServer:
             while True:
                 events = self.sel.select(timeout=None)
                 for key, mask in events:
-                    print('{} = {}'.format(key, mask))
+                    #print('{} = {}'.format(key, mask))
                     if key.data is None:
                         self.accept_wrapper(key.fileobj)
                     else:
