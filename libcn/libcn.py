@@ -19,8 +19,10 @@ class CypherNode:
         key=None, \
         url=None, \
         configfile="{}/.cn/cn.conf".format(os.path.expanduser('~')), \
+        tor=False, \
         unsecure=False, \
-        verbose=False):
+        verbose=False, \
+        cert=['None']):
         """Cyphernode object reprensenting a cyphernode server"""
         self.stats_cmd = ['getblockchaininfo', 'getblockhash', \
             'helloworld', 'installation_info', 'getmempoolinfo']
@@ -44,7 +46,19 @@ class CypherNode:
             for item in itm:
                 self.all_cmd.append(item)
         self.unsecure = unsecure
-        self.requests = requests
+        self.cert = cert[0]
+        self.tor = tor
+        if tor:
+            # Need tor installed
+            from torrequest import TorRequest
+            tor_request = TorRequest(proxy_port=9050, ctrl_port=9051, password=None)
+            self.requests = tor_request
+            self.requests.reset_identity()
+            #self.request.tr.ctrl.signal('CLEARDNSCACHE')
+        else:
+            self.requests = requests
+        #headerss = self.get_headers()
+        #print(self.requests.get('https://api.myip.com', headers=headerss, verify=False))
         self.h64 = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9Cg=="
         try:
             if cnid:
@@ -83,8 +97,11 @@ class CypherNode:
         if self.unsecure:
             urllib3.disable_warnings()
             self.req.append('verify=False')
-        elif not self.unsecure:
-            self.req.append('verify=True')
+        else:
+            if self.cert:
+                self.req.append('verify={}'.format(self.cert))
+            else:
+                self.req.append('verify=True')
         if verbose:
             self.verbose()
     def inform(self, command):
@@ -133,9 +150,10 @@ class CypherNode:
         if call in self.auth:
             headers = self.get_headers()
             if headers and endpoint:
-                request = "self.requests.get{}.json()".format(tuple(self.req)).replace('\'', '')
-                response = eval(request)
-                return response
+                request = self.requests.get(endpoint, headers=headers, verify="/home/tom/.cn/cacert.pem").json() #"self.requests.get{}.json()".format(tuple(self.req)).replace('\'', '')
+                print(request)
+                #response = eval(request)
+                return #response
             else:
                 return None
         else:
