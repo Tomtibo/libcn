@@ -43,6 +43,7 @@ ots_stamp
 ots_getfile
 ots_verify
 ots_info
+ln_getroute
 ln_getinvoice
 ln_decodebolt11
 ln_connectfund

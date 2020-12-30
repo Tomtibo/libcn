@@ -5,35 +5,31 @@ import json
 import sys
 from libcn.libcn import CypherNode
 def main(conf):
-    """if os.path.exists(conf.configfile):
-        pass
-    elif:
-        # create new file
-        break
-    if os.path.exists(conf.cert):
-        pass
-    elif:
-        # locate file
-        break"""
     cn = CypherNode(cnid=conf.cnid[0], key=conf.key[0], url=conf.url[0], tor=conf.tor, unsecure=conf.unsecure, verbose=conf.verbose, configfile=conf.configfile, cert=conf.cert)
     resp = None
-    if conf.arguments:
-        resp = eval('cn.{}{}'.format(conf.command, tuple(conf.arguments)))
-    elif not conf.arguments:
-        resp = eval('cn.{}()'.format(conf.command))
-    if conf.info:
-        data = cn.inform(conf.info[0])
+    if conf.info == True:
+        if conf.command:
+            data = cn.inform(conf.command)
+            print(data)
+    elif conf.token == True:
+        data = cn.get_token()
         print(data)
-    if conf.list:
-        cn.listing(conf.list[0])
-    if conf.token:
-        token = cn.get_token()
-        print(token)
-    if resp:
-        if conf.json == True:
-            print(json.dumps(resp, indent=2, sort_keys=False))
-        else:
-            print(json.dumps(resp))
+    else:
+        if conf.showip:
+            data = cn.show_ip()
+            print(data['ip'])
+        if conf.arguments:
+            resp = eval('cn.{}{}'.format(conf.command, tuple(conf.arguments)))
+        elif not conf.arguments:
+            resp = eval('cn.{}()'.format(conf.command))
+        if resp:
+            if type(resp) == dict:
+                if conf.json == True:
+                    print(json.dumps(resp, indent=2, sort_keys=False))
+                else:
+                    print(json.dumps(resp))
+            else:
+                print(resp)
 if __name__=='__main__':
     conf = argparse.ArgumentParser()
     conf.add_argument('command', nargs='?', help='Command')
@@ -41,14 +37,15 @@ if __name__=='__main__':
     conf.add_argument('--cnid', nargs=1, type=str, default=['None'], choices=['000', '001', '002', '003', None], help='Set the cyphernode ID')
     conf.add_argument('--key', nargs=1, type=str, default=['None'], help='Set the cyphernode autorisation key')
     conf.add_argument('--url', nargs=1, type=str, default=['None'], help='Set the cyphernode URL')
-    conf.add_argument('-l', '--list', nargs=1, type=str, choices=['all', 'stats', 'watcher', 'spender',' admin'], help='List command available')
-    conf.add_argument('-i', '--info', nargs=1, type=str, metavar='COMMAND', help='Get command informations')
-    conf.add_argument('--cert', nargs=1, type=str, default=['None'], help='Define the cert relative to home path')
-    conf.add_argument('-c', '--configfile', nargs=1, type=str, default=None, help='Define the configuration file relative to home path')
-    conf.add_argument('--tor', action="store_true", default=None, help='Ignore ssl certificate error')
+    conf.add_argument('--cert', nargs=1, type=str, default=['None'], help='Define the cacert path')
+    conf.add_argument('-c', '--configfile', nargs=1, type=str, default="{}/.cn/cn.conf".format(os.path.expanduser('~')), help='Define the configuration file path')
+    conf.add_argument('-i', '--info', action="store_true", default=False, help='Get command informations')
+    conf.add_argument('--token', action="store_true", default=None, help='Generate and return autorisation token')
+    conf.add_argument('--showip', action="store_true", default=None, help='Show IP addresse used for the request. Used with --tor')
+    conf.add_argument('-t', '--tor', nargs=1, type=str, default=False, help='Use local tor daemon for request. Need HTTPTunnelPort enabled in \'/etc/tor/torrc\'')
     conf.add_argument('-u', '--unsecure', action="store_true", default=None, help='Ignore ssl certificate error')
     conf.add_argument('-j', '--json', action="store_true", default=None, help='Use json indentation formating')
-    conf.add_argument('-t', '--token', action="store_true", default=None, help='Generate and return autorisation token')
     conf.add_argument('-v', '--verbose', action="store_true", help='Use verbose mode')
     args = conf.parse_args(sys.argv[1:])
     main(args)
+    
