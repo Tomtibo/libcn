@@ -5,7 +5,7 @@ import json
 import sys
 from libcn.libcn import CypherNode
 def main(conf):
-    cn = CypherNode(cnid=conf.cnid[0], key=conf.key[0], url=conf.url[0], tor=conf.tor, unsecure=conf.unsecure, verbose=conf.verbose, configfile=conf.configfile, cert=conf.cert)
+    cn = CypherNode(cnid=conf.cnid[0], key=conf.key[0], url=conf.url[0], torport=conf.torport, unsecure=conf.unsecure, verbose=conf.verbose, configfile=conf.configfile, cert=conf.cert[0])
     resp = None
     if conf.info == True:
         if conf.command:
@@ -41,8 +41,8 @@ if __name__=='__main__':
     conf.add_argument('-c', '--configfile', nargs=1, type=str, default="{}/.cn/cn.conf".format(os.path.expanduser('~')), help='Define the configuration file path')
     conf.add_argument('-i', '--info', action="store_true", default=False, help='Get command informations')
     conf.add_argument('--token', action="store_true", default=None, help='Generate and return autorisation token')
-    conf.add_argument('--showip', action="store_true", default=None, help='Show IP addresse used for the request. Used with --tor')
-    conf.add_argument('-t', '--tor', nargs=1, type=str, default=False, help='Use local tor daemon for request. Need HTTPTunnelPort enabled in \'/etc/tor/torrc\'')
+    conf.add_argument('--showip', action="store_true", default=None, help='Show IP addresse used for the request. Used with --torport')
+    conf.add_argument('-t', '--torport', nargs=1, type=int, default=False, help='Use local tor daemon for request. Need HTTPTunnelPort enabled in \'/etc/tor/torrc\'')
     conf.add_argument('-u', '--unsecure', action="store_true", default=None, help='Ignore ssl certificate error')
     conf.add_argument('-j', '--json', action="store_true", default=None, help='Use json indentation formating')
     conf.add_argument('-v', '--verbose', action="store_true", help='Use verbose mode')

@@ -20,7 +20,7 @@ class CypherNode:
         url=None, \
         cert=None, \
         configfile="{}/.cn/cn.conf".format(os.path.expanduser('~')), \
-        tor=False, \
+        torport=False, \
         unsecure=False, \
         showip=False, \
         verbose=False):
@@ -79,15 +79,18 @@ class CypherNode:
             print('Authentification failed !')
             return None
         self.req = ['endpoint', 'headers=headers']
-        if tor:
-            print("Tor Activated!")
-            self.req.append('proxies={"https": "127.0.0.1:{}"}'.format(tor))
+        if torport:
+            prox = '{"https": "127.0.0.1:9081"}'
+            self.req.append('proxies={}'.format(prox))
+            t = 30 #Timeout
+            self.req.append('timeout={}'.format(t))
+            print("Tor Activated! Using IP {}".format(self.show_ip()))
         if unsecure:
             urllib3.disable_warnings()
             self.req.append('verify=False')
         else:
             if cert:
-                self.req.append('verify="{}"'.format(cert[0]))
+                self.req.append('verify="{}"'.format(cert))
             else:
                 self.req.append('verify=True')
         if verbose:
@@ -137,6 +140,7 @@ class CypherNode:
         endpoint = "https://api.myip.com"
         headers = {"accept": "applicaition/json", "Connection":"close"}
         request = "self.requests.get{}.json()".format(tuple(self.req)).replace('\'', '')
+        print(request)
         response = eval(request)
         return response
     def get_data(self, call, endpoint):
