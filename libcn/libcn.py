@@ -20,9 +20,7 @@ class CypherNode:
         url=None, \
         cert=None, \
         configfile="{}/.cn/cn.conf".format(os.path.expanduser('~')), \
-        tor=False, \
         unsecure=False, \
-        showip=False, \
         verbose=False):
         """Cyphernode object reprensenting a cyphernode server"""
         stats_cmd = ['getblockchaininfo', 'getblockhash', \
@@ -51,6 +49,7 @@ class CypherNode:
         self.cnid = cnid
         self.key = key
         self.url = url
+        self.cert = cert
         try:
             if configfile:  # If no explicit config provided, search for configfile in ~/.cn/cn.conf
                 config = configparser.ConfigParser()
@@ -59,6 +58,7 @@ class CypherNode:
                     self.cnid = "{}".format(config.get(k, 'cnid')).replace('"', '')
                     self.key = "{}".format(config.get(k, 'key')).replace('"', '')
                     self.url = "{}".format(config.get(k, 'url')).replace('"', '')
+                    self.cert = "{}".format(config.get(k, 'cert')).replace('"', '')
             self.auth = []
             if self.cnid == '003':
                 for itm in stats_cmd, watcher_cmd, spender_cmd, admin_cmd:
@@ -79,17 +79,13 @@ class CypherNode:
             print('Authentification failed !')
             return None
         self.req = ['endpoint', 'headers=headers']
-        if tor:
-            print("Tor Activated!")
-            self.req.append('proxies={"https": "127.0.0.1:{}"}'.format(tor))
         if unsecure:
             urllib3.disable_warnings()
             self.req.append('verify=False')
+        elif self.cert:
+                self.req.append('verify="{}"'.format(self.cert))
         else:
-            if cert:
-                self.req.append('verify="{}"'.format(cert[0]))
-            else:
-                self.req.append('verify=True')
+            print('Error! Invalid ssl certificate, use --cert with a valid cert, or bypass cert validation with the -u, --unsecure option')
         if verbose:
             self.verbose()
     def inform(self, command):
@@ -133,18 +129,13 @@ class CypherNode:
         headers["Authorization"] = "Bearer {}".format(self.get_token())
         headers["Connection"] = "close"
         return headers
-    def show_ip(self):
-        endpoint = "https://api.myip.com"
-        headers = {"accept": "applicaition/json", "Connection":"close"}
-        request = "self.requests.get{}.json()".format(tuple(self.req)).replace('\'', '')
-        response = eval(request)
-        return response
     def get_data(self, call, endpoint):
         """Get data request"""
         if call in self.auth:
             headers = self.get_headers()
             if headers and endpoint:
                 request = "self.requests.get{}.json()".format(tuple(self.req)).replace('\'', '')
+                #print(request)
                 response = eval(request)
                 return response
             else:
@@ -158,6 +149,7 @@ class CypherNode:
             if headers and endpoint and payload:
                 self.req.append('data=payload')
                 request = "self.requests.post{}.json()".format(tuple(self.req)).replace('\'', '')
+                #print(request)
                 response = eval(request)
                 return response
             else:
@@ -585,6 +577,7 @@ hash [base64otsfile]"""
         #endpoint = "{}/{}".format(self.url, call)
         #response = self.get_data(call, endpoint)
         #return response
+
 class CallbackServer:
     """CallbackServer is a socket server used in a child class to
     listen incoming callbacks request"""
